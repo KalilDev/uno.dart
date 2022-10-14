@@ -221,9 +221,11 @@ class UnoState implements ProductType {
   final Map<UnoPlayerId, UnoPlayerState> players;
   final Queue<UnoCard> playedCards;
   final Queue<UnoCard> cardStack;
+  final UnoCardColor currentColor;
   final UnoPlayState play;
 
-  const UnoState(this.players, this.playedCards, this.cardStack, this.play)
+  const UnoState(this.players, this.playedCards, this.cardStack,
+      this.currentColor, this.play)
       : super();
 
   @override
@@ -231,12 +233,13 @@ class UnoState implements ProductType {
         Map<UnoPlayerId, UnoPlayerState>,
         Queue<UnoCard>,
         Queue<UnoCard>,
+        UnoCardColor,
         UnoPlayState
       ]);
 
   @override
-  int get hashCode =>
-      Object.hash((UnoState), players, playedCards, cardStack, play);
+  int get hashCode => Object.hash(
+      (UnoState), players, playedCards, cardStack, currentColor, play);
   @override
   bool operator ==(other) =>
       identical(this, other) ||
@@ -245,10 +248,12 @@ class UnoState implements ProductType {
           this.players == other.players &&
           this.playedCards == other.playedCards &&
           this.cardStack == other.cardStack &&
+          this.currentColor == other.currentColor &&
           this.play == other.play);
 
   @override
-  String toString() => "UnoState { $players, $playedCards, $cardStack, $play }";
+  String toString() =>
+      "UnoState { $players, $playedCards, $cardStack, $currentColor, $play }";
 }
 
 class UnoPlayerState implements ProductType {

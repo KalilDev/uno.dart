@@ -44,6 +44,7 @@ const Type _UnoPlayerId = UnoPlayerId;
       #players: T(#Map, args: [T(#UnoPlayerId), T(#UnoPlayerState)]),
       #playedCards: T(#Queue, args: [T(#UnoCard)]),
       #cardStack: T(#Queue, args: [T(#UnoCard)]),
+      #currentColor: T(#UnoCardColor),
       #play: T(#UnoPlayState),
     },
   ),
@@ -165,7 +166,11 @@ T nextOrPrevious<T>(T value, Iterable<T> values, UnoDirection direction) {
   }
 }
 
-enum UnoRule { plusFourStacksPlusTwo, plusFourStacksPlusFour }
+enum UnoRule {
+  plusTwoStacksPlusTwo,
+  plusFourStacksPlusTwo,
+  plusFourStacksPlusFour,
+}
 
 @data(
   #PlayersPlayedCardsAndCardStack,
@@ -241,6 +246,29 @@ Map<UnoPlayerId, UnoPlayerState> updatePlayerLastPlay(
 
 T identity<T>(T value) => value;
 
+bool isWildcard(UnoCard card) => card.visit(
+      defaultCard: (_, __) => false,
+      reverseCard: (_) => false,
+      blockCard: (_) => false,
+      plusTwoCard: (_) => false,
+      plusFourCard: () => true,
+      rainbowCard: () => true,
+    );
+
+UnoCardColor cardColor(UnoCard card, [UnoCardColor? onWild]) {
+  if (isWildcard(card)) {
+    return onWild!;
+  }
+  return card.visit(
+    defaultCard: (color, __) => color,
+    reverseCard: identity,
+    blockCard: identity,
+    plusTwoCard: identity,
+    plusFourCard: unreachable,
+    rainbowCard: unreachable,
+  );
+}
+
 class ActualUnoStateMachine extends UnoStateMachine {
   final List<StreamController<UnoState>> _listeners = [];
   final int cardsInHand;
@@ -264,12 +292,19 @@ class ActualUnoStateMachine extends UnoStateMachine {
     ...Iterable.generate(4).map((_) => RainbowCard())
   ];
 
-  UnoState _currentState = UnoState(
-    {},
-    Queue(),
-    Queue.of(unoCards.toList()..shuffle()),
-    UnoWaitingStart(),
-  );
+  UnoState _currentState = () {
+    final cards = unoCards.toList()..shuffle();
+    // not wild
+    final cardI = cards.indexWhere((c) => !isWildcard(c));
+    final card = cards.removeAt(cardI);
+    return UnoState(
+      {},
+      Queue()..add(card),
+      Queue.of(cards),
+      cardColor(card),
+      UnoWaitingStart(),
+    );
+  }();
 
   @override
   UnoState get currentState => _currentState;
@@ -310,6 +345,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
           ),
         state.playedCards,
         state.cardStack,
+        state.currentColor,
         state.play,
       );
     }
@@ -339,6 +375,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
         newPlayers,
         state.playedCards,
         newCardStack..addAll(removedPlayer.cards),
+        state.currentColor,
         state.play.visit(
           unoPlaying: (playState) {
             if (playState.currentPlayer != id) {
@@ -361,26 +398,38 @@ class ActualUnoStateMachine extends UnoStateMachine {
             return state;
           }
           final card = oldPlayer.cards[i];
-          final isWildcard = card.visit(
-            defaultCard: (_, __) => false,
-            reverseCard: (_) => false,
-            blockCard: (_) => false,
-            plusTwoCard: (_) => false,
-            plusFourCard: () => true,
-            rainbowCard: () => true,
-          );
-          if (isWildcard && chosenWildcardColor == null) {
+          if (isWildcard(card) && chosenWildcardColor == null) {
             return state;
           }
+
           final topOfStack = state.playedCards.last;
-          final canPlay = topOfStack.visit(
-            defaultCard: defaultCard,
-            reverseCard: reverseCard,
-            blockCard: blockCard,
-            plusTwoCard: plusTwoCard,
-            plusFourCard: plusFourCard,
-            rainbowCard: rainbowCard,
-          );
+
+          if (playState.stackingPluses.isNotEmpty &&
+              card.visit(
+                defaultCard: (_, __) => false,
+                reverseCard: (_) => false,
+                blockCard: (_) => false,
+                plusTwoCard: (_) =>
+                    rules.contains(UnoRule.plusTwoStacksPlusTwo) &&
+                    topOfStack is PlusTwoCard,
+                plusFourCard: () =>
+                    rules.contains(UnoRule.plusFourStacksPlusTwo) ||
+                    rules.contains(UnoRule.plusFourStacksPlusFour),
+                rainbowCard: () => false,
+              ))
+            final canPlay = card.visit(
+              defaultCard: (color, _) => color == state.currentColor,
+              reverseCard: (color) => color == state.currentColor,
+              blockCard: (color) => color == state.currentColor,
+              plusTwoCard: (color) =>
+                  color == state.currentColor ||
+                  rules.contains(UnoRule.plusTwoStacksPlusTwo) &&
+                      topOfStack is PlusTwoCard,
+              plusFourCard: () =>
+                  rules.contains(UnoRule.plusTwoStacksPlusTwo) &&
+                  topOfStack is PlusTwoCard,
+              rainbowCard: rainbowCard,
+            );
         },
         sayUno: () {
           final oldPlayer = state.players[playState.currentPlayer]!;
@@ -410,6 +459,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
             newPlayers,
             state.playedCards,
             state.cardStack,
+            state.currentColor,
             newPlayState,
           );
         },
@@ -433,6 +483,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
               state.players,
               state.playedCards,
               state.cardStack,
+              state.currentColor,
               newPlayState,
             );
           }
@@ -472,6 +523,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
             updatePlayerLastPlay(eatenCardState.e0, playState.currentPlayer),
             eatenCardState.e1,
             eatenCardState.e2,
+            state.currentColor,
             newPlayState,
           );
         },
@@ -500,6 +552,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
             updatePlayerLastPlay(eatenCardState.e0, playState.currentPlayer),
             eatenCardState.e1,
             eatenCardState.e2,
+            state.currentColor,
             skipPlayer(playState),
           );
         },
@@ -529,6 +582,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
             eatenCardState.e0,
             eatenCardState.e1,
             eatenCardState.e2,
+            state.currentColor,
             playState,
           );
         },
@@ -542,6 +596,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
             state.players,
             state.playedCards,
             state.cardStack,
+            state.currentColor,
             UnoPlaying(
               DateTime.now(),
               DateTime.now(),
@@ -569,6 +624,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
               ),
             state.playedCards,
             state.cardStack,
+            state.currentColor,
             state.play,
           );
         },
