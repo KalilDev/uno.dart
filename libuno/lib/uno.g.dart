@@ -27,6 +27,13 @@ abstract class UnoCard implements SumType {
       ]);
 
   R visit<R extends Object?>(
+      {required R Function(DefaultCard) defaultCard,
+      required R Function(ReverseCard) reverseCard,
+      required R Function(BlockCard) blockCard,
+      required R Function(PlusTwoCard) plusTwoCard,
+      required R Function(PlusFourCard) plusFourCard,
+      required R Function(RainbowCard) rainbowCard});
+  R visitC<R extends Object?>(
       {required R Function(UnoCardColor color, int number) defaultCard,
       required R Function(UnoCardColor color) reverseCard,
       required R Function(UnoCardColor color) blockCard,
@@ -65,6 +72,16 @@ class DefaultCard extends UnoCard {
 
   @override
   R visit<R extends Object?>(
+          {required R Function(DefaultCard) defaultCard,
+          required R Function(ReverseCard) reverseCard,
+          required R Function(BlockCard) blockCard,
+          required R Function(PlusTwoCard) plusTwoCard,
+          required R Function(PlusFourCard) plusFourCard,
+          required R Function(RainbowCard) rainbowCard}) =>
+      defaultCard(this);
+
+  @override
+  R visitC<R extends Object?>(
           {required R Function(UnoCardColor color, int number) defaultCard,
           required R Function(UnoCardColor color) reverseCard,
           required R Function(UnoCardColor color) blockCard,
@@ -91,6 +108,16 @@ class ReverseCard extends UnoCard {
 
   @override
   R visit<R extends Object?>(
+          {required R Function(DefaultCard) defaultCard,
+          required R Function(ReverseCard) reverseCard,
+          required R Function(BlockCard) blockCard,
+          required R Function(PlusTwoCard) plusTwoCard,
+          required R Function(PlusFourCard) plusFourCard,
+          required R Function(RainbowCard) rainbowCard}) =>
+      reverseCard(this);
+
+  @override
+  R visitC<R extends Object?>(
           {required R Function(UnoCardColor color, int number) defaultCard,
           required R Function(UnoCardColor color) reverseCard,
           required R Function(UnoCardColor color) blockCard,
@@ -117,6 +144,16 @@ class BlockCard extends UnoCard {
 
   @override
   R visit<R extends Object?>(
+          {required R Function(DefaultCard) defaultCard,
+          required R Function(ReverseCard) reverseCard,
+          required R Function(BlockCard) blockCard,
+          required R Function(PlusTwoCard) plusTwoCard,
+          required R Function(PlusFourCard) plusFourCard,
+          required R Function(RainbowCard) rainbowCard}) =>
+      blockCard(this);
+
+  @override
+  R visitC<R extends Object?>(
           {required R Function(UnoCardColor color, int number) defaultCard,
           required R Function(UnoCardColor color) reverseCard,
           required R Function(UnoCardColor color) blockCard,
@@ -143,6 +180,16 @@ class PlusTwoCard extends UnoCard {
 
   @override
   R visit<R extends Object?>(
+          {required R Function(DefaultCard) defaultCard,
+          required R Function(ReverseCard) reverseCard,
+          required R Function(BlockCard) blockCard,
+          required R Function(PlusTwoCard) plusTwoCard,
+          required R Function(PlusFourCard) plusFourCard,
+          required R Function(RainbowCard) rainbowCard}) =>
+      plusTwoCard(this);
+
+  @override
+  R visitC<R extends Object?>(
           {required R Function(UnoCardColor color, int number) defaultCard,
           required R Function(UnoCardColor color) reverseCard,
           required R Function(UnoCardColor color) blockCard,
@@ -166,6 +213,16 @@ class PlusFourCard extends UnoCard {
 
   @override
   R visit<R extends Object?>(
+          {required R Function(DefaultCard) defaultCard,
+          required R Function(ReverseCard) reverseCard,
+          required R Function(BlockCard) blockCard,
+          required R Function(PlusTwoCard) plusTwoCard,
+          required R Function(PlusFourCard) plusFourCard,
+          required R Function(RainbowCard) rainbowCard}) =>
+      plusFourCard(this);
+
+  @override
+  R visitC<R extends Object?>(
           {required R Function(UnoCardColor color, int number) defaultCard,
           required R Function(UnoCardColor color) reverseCard,
           required R Function(UnoCardColor color) blockCard,
@@ -189,6 +246,16 @@ class RainbowCard extends UnoCard {
 
   @override
   R visit<R extends Object?>(
+          {required R Function(DefaultCard) defaultCard,
+          required R Function(ReverseCard) reverseCard,
+          required R Function(BlockCard) blockCard,
+          required R Function(PlusTwoCard) plusTwoCard,
+          required R Function(PlusFourCard) plusFourCard,
+          required R Function(RainbowCard) rainbowCard}) =>
+      rainbowCard(this);
+
+  @override
+  R visitC<R extends Object?>(
           {required R Function(UnoCardColor color, int number) defaultCard,
           required R Function(UnoCardColor color) reverseCard,
           required R Function(UnoCardColor color) blockCard,
@@ -218,9 +285,9 @@ class UnoPlayerId implements ProductType {
 }
 
 class UnoState implements ProductType {
-  final Map<UnoPlayerId, UnoPlayerState> players;
-  final Queue<UnoCard> playedCards;
-  final Queue<UnoCard> cardStack;
+  final PlayerStates players;
+  final UnoCards playedCards;
+  final UnoCards cardStack;
   final UnoCardColor currentColor;
   final UnoPlayState play;
 
@@ -229,13 +296,8 @@ class UnoState implements ProductType {
       : super();
 
   @override
-  ProductRuntimeType get runtimeType => ProductRuntimeType([
-        Map<UnoPlayerId, UnoPlayerState>,
-        Queue<UnoCard>,
-        Queue<UnoCard>,
-        UnoCardColor,
-        UnoPlayState
-      ]);
+  ProductRuntimeType get runtimeType => ProductRuntimeType(
+      [PlayerStates, UnoCards, UnoCards, UnoCardColor, UnoPlayState]);
 
   @override
   int get hashCode => Object.hash(
@@ -801,25 +863,20 @@ class PlayerSnitchedUno extends UnoEvent {
 }
 
 class PlayersPlayedCardsAndCardStack
-    implements
-        ProductType,
-        TupleN3<Map<UnoPlayerId, UnoPlayerState>, Queue<UnoCard>,
-            Queue<UnoCard>> {
-  final Map<UnoPlayerId, UnoPlayerState> e0;
-  final Queue<UnoCard> e1;
-  final Queue<UnoCard> e2;
+    implements ProductType, TupleN3<PlayerStates, UnoCards, UnoCards> {
+  final PlayerStates e0;
+  final UnoCards e1;
+  final UnoCards e2;
 
   const PlayersPlayedCardsAndCardStack(this.e0, this.e1, this.e2) : super();
 
   factory PlayersPlayedCardsAndCardStack.fromTupleN(
-          TupleN3<Map<UnoPlayerId, UnoPlayerState>, Queue<UnoCard>,
-                  Queue<UnoCard>>
-              tpl) =>
+          TupleN3<PlayerStates, UnoCards, UnoCards> tpl) =>
       PlayersPlayedCardsAndCardStack(tpl.e0, tpl.e1, tpl.e2);
 
   @override
-  ProductRuntimeType get runtimeType => ProductRuntimeType(
-      [Map<UnoPlayerId, UnoPlayerState>, Queue<UnoCard>, Queue<UnoCard>]);
+  ProductRuntimeType get runtimeType =>
+      ProductRuntimeType([PlayerStates, UnoCards, UnoCards]);
 
   @override
   int get hashCode => Object.hash((PlayersPlayedCardsAndCardStack), e0, e1, e2);
