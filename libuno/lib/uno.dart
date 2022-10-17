@@ -31,11 +31,15 @@ enum UnoCardColor {
 const Type _UnoCard = UnoCard;
 
 typedef UnoCards = Queue<UnoCard>;
+typedef UnoCardList = List<UnoCard>;
 
 @data(
   #UnoPlayerId,
   [],
-  Opaque(T(#String)),
+  Opaque(
+    T(#String),
+    exposeConstructor: true,
+  ),
 )
 const Type _UnoPlayerId = UnoPlayerId;
 
@@ -61,7 +65,7 @@ const Type _UnoState = UnoState;
     {
       #id: T(#UnoPlayerId),
       #name: T(#String),
-      #cards: T(#List, args: [T(#UnoCard)]),
+      #cards: T(#UnoCardList),
       #lastPlayTime: T(#DateTime),
       #didUno: T(#bool),
     },
@@ -216,7 +220,7 @@ PlayersPlayedCardsAndCardStack makePlayerEatCards(
     final newPlayer = UnoPlayerState(
       player,
       oldPlayer.name,
-      oldPlayer.cards.toList()..remove(card),
+      UnoCardList.of(oldPlayer.cards)..remove(card),
       oldPlayer.lastPlayTime,
       false,
     );
@@ -313,7 +317,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
   ];
 
   UnoState _currentState = () {
-    final cards = unoCards.toList()..shuffle();
+    final cards = UnoCardList.of(unoCards)..shuffle();
     // not wild
     final cardI = cards.indexWhere((c) => !isWildcard(c));
     final card = cards.removeAt(cardI);
@@ -465,7 +469,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
       if (cardIndex >= oldPlayer.cards.length) {
         return Tuple2(playerStates, playedCards);
       }
-      final newCards = oldPlayer.cards.toList();
+      final newCards = UnoCardList.of(oldPlayer.cards);
       final card = newCards.removeAt(cardIndex);
       final newPlayer = UnoPlayerState(
         oldPlayer.id,
@@ -770,7 +774,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
         sayUno: () => state,
         addPlayer: (id, name) {
           final newCardStack = UnoCards.of(state.cardStack);
-          final cards = newCardStack.take(cardsInHand).toList();
+          final cards = UnoCardList.of(newCardStack.take(cardsInHand));
           final newPlayer = UnoPlayerState(
             id,
             name,

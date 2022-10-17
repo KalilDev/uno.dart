@@ -14,14 +14,14 @@ packages:
       name: adt_annotation_base
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.0.2"
+    version: "3.0.5"
   adt_generator:
     dependency: "direct dev"
     description:
       name: adt_generator
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.0.2"
+    version: "3.0.4"
   analyzer:
     dependency: transitive
     description:
@@ -231,7 +231,7 @@ packages:
       name: kalil_adt_annotation
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.0.3"
+    version: "3.0.7"
   kalil_utils:
     dependency: "direct main"
     description:
@@ -289,7 +289,7 @@ packages:
     source: hosted
     version: "2.1.0"
   path:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: path
       url: "https://pub.dartlang.org"

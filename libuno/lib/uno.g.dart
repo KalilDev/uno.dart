@@ -57,6 +57,9 @@ class DefaultCard extends UnoCard {
 
   const DefaultCard(this.color, this.number) : super._();
 
+  const DefaultCard.named({required this.color, required this.number})
+      : super._();
+
   @override
   int get hashCode => Object.hash((DefaultCard), color, number);
   @override
@@ -69,6 +72,10 @@ class DefaultCard extends UnoCard {
 
   @override
   String toString() => "DefaultCard { $color, $number }";
+
+  DefaultCard copyWith(
+          {required Maybe<UnoCardColor> color, required Maybe<int> number}) =>
+      DefaultCard(color.valueOr(this.color), number.valueOr(this.number));
 
   @override
   R visit<R extends Object?>(
@@ -96,6 +103,8 @@ class ReverseCard extends UnoCard {
 
   const ReverseCard(this.color) : super._();
 
+  const ReverseCard.named({required this.color}) : super._();
+
   @override
   int get hashCode => Object.hash((ReverseCard), color);
   @override
@@ -105,6 +114,9 @@ class ReverseCard extends UnoCard {
 
   @override
   String toString() => "ReverseCard { $color }";
+
+  ReverseCard copyWith({required Maybe<UnoCardColor> color}) =>
+      ReverseCard(color.valueOr(this.color));
 
   @override
   R visit<R extends Object?>(
@@ -132,6 +144,8 @@ class BlockCard extends UnoCard {
 
   const BlockCard(this.color) : super._();
 
+  const BlockCard.named({required this.color}) : super._();
+
   @override
   int get hashCode => Object.hash((BlockCard), color);
   @override
@@ -141,6 +155,9 @@ class BlockCard extends UnoCard {
 
   @override
   String toString() => "BlockCard { $color }";
+
+  BlockCard copyWith({required Maybe<UnoCardColor> color}) =>
+      BlockCard(color.valueOr(this.color));
 
   @override
   R visit<R extends Object?>(
@@ -168,6 +185,8 @@ class PlusTwoCard extends UnoCard {
 
   const PlusTwoCard(this.color) : super._();
 
+  const PlusTwoCard.named({required this.color}) : super._();
+
   @override
   int get hashCode => Object.hash((PlusTwoCard), color);
   @override
@@ -177,6 +196,9 @@ class PlusTwoCard extends UnoCard {
 
   @override
   String toString() => "PlusTwoCard { $color }";
+
+  PlusTwoCard copyWith({required Maybe<UnoCardColor> color}) =>
+      PlusTwoCard(color.valueOr(this.color));
 
   @override
   R visit<R extends Object?>(
@@ -268,7 +290,7 @@ class RainbowCard extends UnoCard {
 class UnoPlayerId implements ProductType {
   final String _unwrap;
 
-  const UnoPlayerId._(this._unwrap);
+  const UnoPlayerId(this._unwrap);
 
   @override
   ProductRuntimeType get runtimeType => ProductRuntimeType([UnoPlayerId]);
@@ -295,6 +317,14 @@ class UnoState implements ProductType {
       this.currentColor, this.play)
       : super();
 
+  const UnoState.named(
+      {required this.players,
+      required this.playedCards,
+      required this.cardStack,
+      required this.currentColor,
+      required this.play})
+      : super();
+
   @override
   ProductRuntimeType get runtimeType => ProductRuntimeType(
       [PlayerStates, UnoCards, UnoCards, UnoCardColor, UnoPlayState]);
@@ -316,12 +346,25 @@ class UnoState implements ProductType {
   @override
   String toString() =>
       "UnoState { $players, $playedCards, $cardStack, $currentColor, $play }";
+
+  UnoState copyWith(
+          {required Maybe<PlayerStates> players,
+          required Maybe<UnoCards> playedCards,
+          required Maybe<UnoCards> cardStack,
+          required Maybe<UnoCardColor> currentColor,
+          required Maybe<UnoPlayState> play}) =>
+      UnoState(
+          players.valueOr(this.players),
+          playedCards.valueOr(this.playedCards),
+          cardStack.valueOr(this.cardStack),
+          currentColor.valueOr(this.currentColor),
+          play.valueOr(this.play));
 }
 
 class UnoPlayerState implements ProductType {
   final UnoPlayerId id;
   final String name;
-  final List<UnoCard> cards;
+  final UnoCardList cards;
   final DateTime lastPlayTime;
   final bool didUno;
 
@@ -329,9 +372,17 @@ class UnoPlayerState implements ProductType {
       this.id, this.name, this.cards, this.lastPlayTime, this.didUno)
       : super();
 
+  const UnoPlayerState.named(
+      {required this.id,
+      required this.name,
+      required this.cards,
+      required this.lastPlayTime,
+      required this.didUno})
+      : super();
+
   @override
   ProductRuntimeType get runtimeType =>
-      ProductRuntimeType([UnoPlayerId, String, List<UnoCard>, DateTime, bool]);
+      ProductRuntimeType([UnoPlayerId, String, UnoCardList, DateTime, bool]);
 
   @override
   int get hashCode =>
@@ -350,6 +401,19 @@ class UnoPlayerState implements ProductType {
   @override
   String toString() =>
       "UnoPlayerState { $id, $name, $cards, $lastPlayTime, $didUno }";
+
+  UnoPlayerState copyWith(
+          {required Maybe<UnoPlayerId> id,
+          required Maybe<String> name,
+          required Maybe<UnoCardList> cards,
+          required Maybe<DateTime> lastPlayTime,
+          required Maybe<bool> didUno}) =>
+      UnoPlayerState(
+          id.valueOr(this.id),
+          name.valueOr(this.name),
+          cards.valueOr(this.cards),
+          lastPlayTime.valueOr(this.lastPlayTime),
+          didUno.valueOr(this.didUno));
 }
 
 abstract class AnPlusTwoOrAnPlusFour implements SumType {
@@ -380,6 +444,8 @@ class AnPlusTwo extends AnPlusTwoOrAnPlusFour {
 
   const AnPlusTwo(this.card) : super._();
 
+  const AnPlusTwo.named({required this.card}) : super._();
+
   @override
   int get hashCode => Object.hash((AnPlusTwo), card);
   @override
@@ -389,6 +455,9 @@ class AnPlusTwo extends AnPlusTwoOrAnPlusFour {
 
   @override
   String toString() => "AnPlusTwo { $card }";
+
+  AnPlusTwo copyWith({required Maybe<PlusTwoCard> card}) =>
+      AnPlusTwo(card.valueOr(this.card));
 
   @override
   R visit<R extends Object?>(
@@ -402,6 +471,8 @@ class AnPlusFour extends AnPlusTwoOrAnPlusFour {
 
   const AnPlusFour(this.card) : super._();
 
+  const AnPlusFour.named({required this.card}) : super._();
+
   @override
   int get hashCode => Object.hash((AnPlusFour), card);
   @override
@@ -411,6 +482,9 @@ class AnPlusFour extends AnPlusTwoOrAnPlusFour {
 
   @override
   String toString() => "AnPlusFour { $card }";
+
+  AnPlusFour copyWith({required Maybe<PlusFourCard> card}) =>
+      AnPlusFour(card.valueOr(this.card));
 
   @override
   R visit<R extends Object?>(
@@ -468,6 +542,15 @@ class UnoPlaying extends UnoPlayState {
       this.stackingPluses)
       : super._();
 
+  const UnoPlaying.named(
+      {required this.startTime,
+      required this.playStartTime,
+      required this.playRemainingDuration,
+      required this.currentPlayer,
+      required this.direction,
+      required this.stackingPluses})
+      : super._();
+
   @override
   int get hashCode => Object.hash((UnoPlaying), startTime, playStartTime,
       playRemainingDuration, currentPlayer, direction, stackingPluses);
@@ -486,6 +569,21 @@ class UnoPlaying extends UnoPlayState {
   @override
   String toString() =>
       "UnoPlaying { $startTime, $playStartTime, $playRemainingDuration, $currentPlayer, $direction, $stackingPluses }";
+
+  UnoPlaying copyWith(
+          {required Maybe<DateTime> startTime,
+          required Maybe<DateTime> playStartTime,
+          required Maybe<Duration> playRemainingDuration,
+          required Maybe<UnoPlayerId> currentPlayer,
+          required Maybe<UnoDirection> direction,
+          required Maybe<Queue<AnPlusTwoOrAnPlusFour>> stackingPluses}) =>
+      UnoPlaying(
+          startTime.valueOr(this.startTime),
+          playStartTime.valueOr(this.playStartTime),
+          playRemainingDuration.valueOr(this.playRemainingDuration),
+          currentPlayer.valueOr(this.currentPlayer),
+          direction.valueOr(this.direction),
+          stackingPluses.valueOr(this.stackingPluses));
 
   @override
   R visit<R extends Object?>(
@@ -521,6 +619,9 @@ class UnoFinished extends UnoPlayState {
 
   const UnoFinished(this.winner, this.duration) : super._();
 
+  const UnoFinished.named({required this.winner, required this.duration})
+      : super._();
+
   @override
   int get hashCode => Object.hash((UnoFinished), winner, duration);
   @override
@@ -533,6 +634,11 @@ class UnoFinished extends UnoPlayState {
 
   @override
   String toString() => "UnoFinished { $winner, $duration }";
+
+  UnoFinished copyWith(
+          {required Maybe<UnoPlayerId> winner,
+          required Maybe<Duration> duration}) =>
+      UnoFinished(winner.valueOr(this.winner), duration.valueOr(this.duration));
 
   @override
   R visit<R extends Object?>(
@@ -625,6 +731,10 @@ class PlayCard extends UnoEvent {
 
   const PlayCard(this.cardIndex, this.chosenWildcardColor) : super._();
 
+  const PlayCard.named(
+      {required this.cardIndex, required this.chosenWildcardColor})
+      : super._();
+
   @override
   int get hashCode => Object.hash((PlayCard), cardIndex, chosenWildcardColor);
   @override
@@ -637,6 +747,12 @@ class PlayCard extends UnoEvent {
 
   @override
   String toString() => "PlayCard { $cardIndex, $chosenWildcardColor }";
+
+  PlayCard copyWith(
+          {required Maybe<int> cardIndex,
+          required Maybe<UnoCardColor?> chosenWildcardColor}) =>
+      PlayCard(cardIndex.valueOr(this.cardIndex),
+          chosenWildcardColor.valueOr(this.chosenWildcardColor));
 
   @override
   R visit<R extends Object?>(
@@ -686,6 +802,8 @@ class AddPlayer extends UnoEvent {
 
   const AddPlayer(this.id, this.name) : super._();
 
+  const AddPlayer.named({required this.id, required this.name}) : super._();
+
   @override
   int get hashCode => Object.hash((AddPlayer), id, name);
   @override
@@ -698,6 +816,10 @@ class AddPlayer extends UnoEvent {
 
   @override
   String toString() => "AddPlayer { $id, $name }";
+
+  AddPlayer copyWith(
+          {required Maybe<UnoPlayerId> id, required Maybe<String> name}) =>
+      AddPlayer(id.valueOr(this.id), name.valueOr(this.name));
 
   @override
   R visit<R extends Object?>(
@@ -720,6 +842,9 @@ class ChangePlayerName extends UnoEvent {
 
   const ChangePlayerName(this.id, this.name) : super._();
 
+  const ChangePlayerName.named({required this.id, required this.name})
+      : super._();
+
   @override
   int get hashCode => Object.hash((ChangePlayerName), id, name);
   @override
@@ -732,6 +857,10 @@ class ChangePlayerName extends UnoEvent {
 
   @override
   String toString() => "ChangePlayerName { $id, $name }";
+
+  ChangePlayerName copyWith(
+          {required Maybe<UnoPlayerId> id, required Maybe<String> name}) =>
+      ChangePlayerName(id.valueOr(this.id), name.valueOr(this.name));
 
   @override
   R visit<R extends Object?>(
@@ -753,6 +882,8 @@ class RemovePlayer extends UnoEvent {
 
   const RemovePlayer(this.id) : super._();
 
+  const RemovePlayer.named({required this.id}) : super._();
+
   @override
   int get hashCode => Object.hash((RemovePlayer), id);
   @override
@@ -762,6 +893,9 @@ class RemovePlayer extends UnoEvent {
 
   @override
   String toString() => "RemovePlayer { $id }";
+
+  RemovePlayer copyWith({required Maybe<UnoPlayerId> id}) =>
+      RemovePlayer(id.valueOr(this.id));
 
   @override
   R visit<R extends Object?>(
@@ -837,6 +971,8 @@ class PlayerSnitchedUno extends UnoEvent {
 
   const PlayerSnitchedUno(this.player) : super._();
 
+  const PlayerSnitchedUno.named({required this.player}) : super._();
+
   @override
   int get hashCode => Object.hash((PlayerSnitchedUno), player);
   @override
@@ -846,6 +982,9 @@ class PlayerSnitchedUno extends UnoEvent {
 
   @override
   String toString() => "PlayerSnitchedUno { $player }";
+
+  PlayerSnitchedUno copyWith({required Maybe<UnoPlayerId> player}) =>
+      PlayerSnitchedUno(player.valueOr(this.player));
 
   @override
   R visit<R extends Object?>(
@@ -891,4 +1030,11 @@ class PlayersPlayedCardsAndCardStack
 
   @override
   String toString() => "PlayersPlayedCardsAndCardStack ($e0, $e1, $e2)";
+
+  PlayersPlayedCardsAndCardStack copyWith(
+          {required Maybe<PlayerStates> e0,
+          required Maybe<UnoCards> e1,
+          required Maybe<UnoCards> e2}) =>
+      PlayersPlayedCardsAndCardStack(
+          e0.valueOr(this.e0), e1.valueOr(this.e1), e2.valueOr(this.e2));
 }
