@@ -27,6 +27,7 @@ enum UnoCardColor {
     },
     deriveMode: UnionVisitDeriveMode.both,
   ),
+  deriveFromJson: true,
 )
 const Type _UnoCard = UnoCard;
 
@@ -40,6 +41,7 @@ typedef UnoCardList = List<UnoCard>;
     T(#String),
     exposeConstructor: true,
   ),
+  deriveFromJson: true,
 )
 const Type _UnoPlayerId = UnoPlayerId;
 
@@ -55,6 +57,7 @@ const Type _UnoPlayerId = UnoPlayerId;
       #play: T(#UnoPlayState),
     },
   ),
+  deriveFromJson: true,
 )
 const Type _UnoState = UnoState;
 
@@ -70,6 +73,7 @@ const Type _UnoState = UnoState;
       #didUno: T(#bool),
     },
   ),
+  deriveFromJson: true,
 )
 const Type _UnoPlayerState = UnoPlayerState;
 
@@ -86,6 +90,7 @@ enum UnoDirection { clockwise, counterClockwise }
       #AnPlusFour: {#card: T(#PlusFourCard)},
     },
   ),
+  deriveFromJson: true,
 )
 const Type _AnPlusTwoOrAnPlusFour = AnPlusTwoOrAnPlusFour;
 
@@ -106,6 +111,7 @@ typedef PlusTwosOrPlusFours = Queue<AnPlusTwoOrAnPlusFour>;
     #UnoWaitingStart: {},
     #UnoFinished: {#winner: T(#UnoPlayerId), #duration: T(#Duration)},
   }),
+  deriveFromJson: true,
 )
 const Type _UnoPlayState = UnoPlayState;
 
@@ -128,6 +134,7 @@ const Type _UnoPlayState = UnoPlayState;
       #PlayerSnitchedUno: {#player: T(#UnoPlayerId)}
     },
   ),
+  deriveFromJson: true,
 )
 const Type _UnoEvent = UnoEvent;
 
@@ -191,6 +198,7 @@ enum UnoRule {
     T(#UnoCards),
     T(#UnoCards),
   ]),
+  deriveFromJson: true,
 )
 const Type _PlayersPlayedCardsAndCardStack = PlayersPlayedCardsAndCardStack;
 
