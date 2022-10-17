@@ -74,7 +74,8 @@ class DefaultCard extends UnoCard {
   String toString() => "DefaultCard { $color, $number }";
 
   DefaultCard copyWith(
-          {required Maybe<UnoCardColor> color, required Maybe<int> number}) =>
+          {Maybe<UnoCardColor> color = const Maybe.none(),
+          Maybe<int> number = const Maybe.none()}) =>
       DefaultCard(color.valueOr(this.color), number.valueOr(this.number));
 
   @override
@@ -115,7 +116,7 @@ class ReverseCard extends UnoCard {
   @override
   String toString() => "ReverseCard { $color }";
 
-  ReverseCard copyWith({required Maybe<UnoCardColor> color}) =>
+  ReverseCard copyWith({Maybe<UnoCardColor> color = const Maybe.none()}) =>
       ReverseCard(color.valueOr(this.color));
 
   @override
@@ -156,7 +157,7 @@ class BlockCard extends UnoCard {
   @override
   String toString() => "BlockCard { $color }";
 
-  BlockCard copyWith({required Maybe<UnoCardColor> color}) =>
+  BlockCard copyWith({Maybe<UnoCardColor> color = const Maybe.none()}) =>
       BlockCard(color.valueOr(this.color));
 
   @override
@@ -197,7 +198,7 @@ class PlusTwoCard extends UnoCard {
   @override
   String toString() => "PlusTwoCard { $color }";
 
-  PlusTwoCard copyWith({required Maybe<UnoCardColor> color}) =>
+  PlusTwoCard copyWith({Maybe<UnoCardColor> color = const Maybe.none()}) =>
       PlusTwoCard(color.valueOr(this.color));
 
   @override
@@ -348,11 +349,11 @@ class UnoState implements ProductType {
       "UnoState { $players, $playedCards, $cardStack, $currentColor, $play }";
 
   UnoState copyWith(
-          {required Maybe<PlayerStates> players,
-          required Maybe<UnoCards> playedCards,
-          required Maybe<UnoCards> cardStack,
-          required Maybe<UnoCardColor> currentColor,
-          required Maybe<UnoPlayState> play}) =>
+          {Maybe<PlayerStates> players = const Maybe.none(),
+          Maybe<UnoCards> playedCards = const Maybe.none(),
+          Maybe<UnoCards> cardStack = const Maybe.none(),
+          Maybe<UnoCardColor> currentColor = const Maybe.none(),
+          Maybe<UnoPlayState> play = const Maybe.none()}) =>
       UnoState(
           players.valueOr(this.players),
           playedCards.valueOr(this.playedCards),
@@ -403,11 +404,11 @@ class UnoPlayerState implements ProductType {
       "UnoPlayerState { $id, $name, $cards, $lastPlayTime, $didUno }";
 
   UnoPlayerState copyWith(
-          {required Maybe<UnoPlayerId> id,
-          required Maybe<String> name,
-          required Maybe<UnoCardList> cards,
-          required Maybe<DateTime> lastPlayTime,
-          required Maybe<bool> didUno}) =>
+          {Maybe<UnoPlayerId> id = const Maybe.none(),
+          Maybe<String> name = const Maybe.none(),
+          Maybe<UnoCardList> cards = const Maybe.none(),
+          Maybe<DateTime> lastPlayTime = const Maybe.none(),
+          Maybe<bool> didUno = const Maybe.none()}) =>
       UnoPlayerState(
           id.valueOr(this.id),
           name.valueOr(this.name),
@@ -456,7 +457,7 @@ class AnPlusTwo extends AnPlusTwoOrAnPlusFour {
   @override
   String toString() => "AnPlusTwo { $card }";
 
-  AnPlusTwo copyWith({required Maybe<PlusTwoCard> card}) =>
+  AnPlusTwo copyWith({Maybe<PlusTwoCard> card = const Maybe.none()}) =>
       AnPlusTwo(card.valueOr(this.card));
 
   @override
@@ -483,7 +484,7 @@ class AnPlusFour extends AnPlusTwoOrAnPlusFour {
   @override
   String toString() => "AnPlusFour { $card }";
 
-  AnPlusFour copyWith({required Maybe<PlusFourCard> card}) =>
+  AnPlusFour copyWith({Maybe<PlusFourCard> card = const Maybe.none()}) =>
       AnPlusFour(card.valueOr(this.card));
 
   @override
@@ -571,12 +572,13 @@ class UnoPlaying extends UnoPlayState {
       "UnoPlaying { $startTime, $playStartTime, $playRemainingDuration, $currentPlayer, $direction, $stackingPluses }";
 
   UnoPlaying copyWith(
-          {required Maybe<DateTime> startTime,
-          required Maybe<DateTime> playStartTime,
-          required Maybe<Duration> playRemainingDuration,
-          required Maybe<UnoPlayerId> currentPlayer,
-          required Maybe<UnoDirection> direction,
-          required Maybe<Queue<AnPlusTwoOrAnPlusFour>> stackingPluses}) =>
+          {Maybe<DateTime> startTime = const Maybe.none(),
+          Maybe<DateTime> playStartTime = const Maybe.none(),
+          Maybe<Duration> playRemainingDuration = const Maybe.none(),
+          Maybe<UnoPlayerId> currentPlayer = const Maybe.none(),
+          Maybe<UnoDirection> direction = const Maybe.none(),
+          Maybe<Queue<AnPlusTwoOrAnPlusFour>> stackingPluses =
+              const Maybe.none()}) =>
       UnoPlaying(
           startTime.valueOr(this.startTime),
           playStartTime.valueOr(this.playStartTime),
@@ -636,8 +638,8 @@ class UnoFinished extends UnoPlayState {
   String toString() => "UnoFinished { $winner, $duration }";
 
   UnoFinished copyWith(
-          {required Maybe<UnoPlayerId> winner,
-          required Maybe<Duration> duration}) =>
+          {Maybe<UnoPlayerId> winner = const Maybe.none(),
+          Maybe<Duration> duration = const Maybe.none()}) =>
       UnoFinished(winner.valueOr(this.winner), duration.valueOr(this.duration));
 
   @override
@@ -749,8 +751,8 @@ class PlayCard extends UnoEvent {
   String toString() => "PlayCard { $cardIndex, $chosenWildcardColor }";
 
   PlayCard copyWith(
-          {required Maybe<int> cardIndex,
-          required Maybe<UnoCardColor?> chosenWildcardColor}) =>
+          {Maybe<int> cardIndex = const Maybe.none(),
+          Maybe<UnoCardColor?> chosenWildcardColor = const Maybe.none()}) =>
       PlayCard(cardIndex.valueOr(this.cardIndex),
           chosenWildcardColor.valueOr(this.chosenWildcardColor));
 
@@ -818,7 +820,8 @@ class AddPlayer extends UnoEvent {
   String toString() => "AddPlayer { $id, $name }";
 
   AddPlayer copyWith(
-          {required Maybe<UnoPlayerId> id, required Maybe<String> name}) =>
+          {Maybe<UnoPlayerId> id = const Maybe.none(),
+          Maybe<String> name = const Maybe.none()}) =>
       AddPlayer(id.valueOr(this.id), name.valueOr(this.name));
 
   @override
@@ -859,7 +862,8 @@ class ChangePlayerName extends UnoEvent {
   String toString() => "ChangePlayerName { $id, $name }";
 
   ChangePlayerName copyWith(
-          {required Maybe<UnoPlayerId> id, required Maybe<String> name}) =>
+          {Maybe<UnoPlayerId> id = const Maybe.none(),
+          Maybe<String> name = const Maybe.none()}) =>
       ChangePlayerName(id.valueOr(this.id), name.valueOr(this.name));
 
   @override
@@ -894,7 +898,7 @@ class RemovePlayer extends UnoEvent {
   @override
   String toString() => "RemovePlayer { $id }";
 
-  RemovePlayer copyWith({required Maybe<UnoPlayerId> id}) =>
+  RemovePlayer copyWith({Maybe<UnoPlayerId> id = const Maybe.none()}) =>
       RemovePlayer(id.valueOr(this.id));
 
   @override
@@ -983,7 +987,8 @@ class PlayerSnitchedUno extends UnoEvent {
   @override
   String toString() => "PlayerSnitchedUno { $player }";
 
-  PlayerSnitchedUno copyWith({required Maybe<UnoPlayerId> player}) =>
+  PlayerSnitchedUno copyWith(
+          {Maybe<UnoPlayerId> player = const Maybe.none()}) =>
       PlayerSnitchedUno(player.valueOr(this.player));
 
   @override
@@ -1032,9 +1037,9 @@ class PlayersPlayedCardsAndCardStack
   String toString() => "PlayersPlayedCardsAndCardStack ($e0, $e1, $e2)";
 
   PlayersPlayedCardsAndCardStack copyWith(
-          {required Maybe<PlayerStates> e0,
-          required Maybe<UnoCards> e1,
-          required Maybe<UnoCards> e2}) =>
+          {Maybe<PlayerStates> e0 = const Maybe.none(),
+          Maybe<UnoCards> e1 = const Maybe.none(),
+          Maybe<UnoCards> e2 = const Maybe.none()}) =>
       PlayersPlayedCardsAndCardStack(
           e0.valueOr(this.e0), e1.valueOr(this.e1), e2.valueOr(this.e2));
 }
