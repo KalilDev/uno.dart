@@ -100,7 +100,8 @@ class DefaultCard extends UnoCard {
       : super._();
 
   factory DefaultCard.fromJson(Object json) => DefaultCard(
-      (json as Map<String, Object?>)[r"color"] as UnoCardColor,
+      enumFromJson<UnoCardColor>(
+          (json as Map<String, Object?>)[r"color"], UnoCardColor.values),
       (json as Map<String, Object?>)[r"number"] as int);
 
   @override
@@ -124,7 +125,11 @@ class DefaultCard extends UnoCard {
   @override
   final $UnoCardType $type = $UnoCardType.DefaultCard;
 
-  Object toJson() => {$type: $type.name, color: color, number: number};
+  Object toJson() => {
+        $type: $type.name,
+        color: enumToJson<UnoCardColor>(color),
+        number: number
+      };
 
   @override
   R visit<R extends Object?>(
@@ -155,7 +160,8 @@ class ReverseCard extends UnoCard {
   const ReverseCard.named({required this.color}) : super._();
 
   factory ReverseCard.fromJson(Object json) =>
-      ReverseCard((json as Map<String, Object?>)[r"color"] as UnoCardColor);
+      ReverseCard(enumFromJson<UnoCardColor>(
+          (json as Map<String, Object?>)[r"color"], UnoCardColor.values));
 
   @override
   int get hashCode => Object.hash((ReverseCard), color);
@@ -173,7 +179,8 @@ class ReverseCard extends UnoCard {
   @override
   final $UnoCardType $type = $UnoCardType.ReverseCard;
 
-  Object toJson() => {$type: $type.name, color: color};
+  Object toJson() =>
+      {$type: $type.name, color: enumToJson<UnoCardColor>(color)};
 
   @override
   R visit<R extends Object?>(
@@ -204,7 +211,8 @@ class BlockCard extends UnoCard {
   const BlockCard.named({required this.color}) : super._();
 
   factory BlockCard.fromJson(Object json) =>
-      BlockCard((json as Map<String, Object?>)[r"color"] as UnoCardColor);
+      BlockCard(enumFromJson<UnoCardColor>(
+          (json as Map<String, Object?>)[r"color"], UnoCardColor.values));
 
   @override
   int get hashCode => Object.hash((BlockCard), color);
@@ -222,7 +230,8 @@ class BlockCard extends UnoCard {
   @override
   final $UnoCardType $type = $UnoCardType.BlockCard;
 
-  Object toJson() => {$type: $type.name, color: color};
+  Object toJson() =>
+      {$type: $type.name, color: enumToJson<UnoCardColor>(color)};
 
   @override
   R visit<R extends Object?>(
@@ -253,7 +262,8 @@ class PlusTwoCard extends UnoCard {
   const PlusTwoCard.named({required this.color}) : super._();
 
   factory PlusTwoCard.fromJson(Object json) =>
-      PlusTwoCard((json as Map<String, Object?>)[r"color"] as UnoCardColor);
+      PlusTwoCard(enumFromJson<UnoCardColor>(
+          (json as Map<String, Object?>)[r"color"], UnoCardColor.values));
 
   @override
   int get hashCode => Object.hash((PlusTwoCard), color);
@@ -271,7 +281,8 @@ class PlusTwoCard extends UnoCard {
   @override
   final $UnoCardType $type = $UnoCardType.PlusTwoCard;
 
-  Object toJson() => {$type: $type.name, color: color};
+  Object toJson() =>
+      {$type: $type.name, color: enumToJson<UnoCardColor>(color)};
 
   @override
   R visit<R extends Object?>(
@@ -422,11 +433,18 @@ class UnoState implements ProductType {
       : super();
 
   factory UnoState.fromJson(Object json) => UnoState(
-      (json as Map<String, Object?>)[r"players"] as PlayerStates,
-      (json as Map<String, Object?>)[r"playedCards"] as UnoCards,
-      (json as Map<String, Object?>)[r"cardStack"] as UnoCards,
-      (json as Map<String, Object?>)[r"currentColor"] as UnoCardColor,
-      (json as Map<String, Object?>)[r"play"] as UnoPlayState);
+      ((json as Map<String, Object?>)[r"players"] as Map<String, Object?>).map(
+          (id, v) =>
+              MapEntry(UnoPlayerId.fromJson(id), UnoPlayerState.fromJson(v!))),
+      UnoCards.of(
+          ((json as Map<String, Object?>)[r"playedCards"] as List<Object?>)
+              .map((e) => UnoCard.fromJson(e!))),
+      UnoCards.of(
+          ((json as Map<String, Object?>)[r"cardStack"] as List<Object?>)
+              .map((e) => UnoCard.fromJson(e!))),
+      enumFromJson<UnoCardColor>(
+          (json as Map<String, Object?>)[r"currentColor"], UnoCardColor.values),
+      UnoPlayState.fromJson((json as Map<String, Object?>)[r"play"]!));
 
   @override
   ProductRuntimeType get runtimeType => ProductRuntimeType(
@@ -434,15 +452,20 @@ class UnoState implements ProductType {
 
   @override
   int get hashCode => Object.hash(
-      (UnoState), players, playedCards, cardStack, currentColor, play);
+      (UnoState),
+      players,
+      _itHash<UnoCard>(playedCards),
+      _itHash<UnoCard>(cardStack),
+      currentColor,
+      play);
   @override
   bool operator ==(other) =>
       identical(this, other) ||
       (other is UnoState &&
           true &&
           this.players == other.players &&
-          this.playedCards == other.playedCards &&
-          this.cardStack == other.cardStack &&
+          _itEquals<UnoCard>(this.playedCards, other.playedCards) &&
+          _itEquals<UnoCard>(this.cardStack, other.cardStack) &&
           this.currentColor == other.currentColor &&
           this.play == other.play);
 
@@ -464,10 +487,10 @@ class UnoState implements ProductType {
           play.valueOr(this.play));
 
   Object toJson() => {
-        players: players,
-        playedCards: playedCards,
-        cardStack: cardStack,
-        currentColor: currentColor,
+        players: players.map((id, v) => MapEntry(id.toJson(), v)),
+        playedCards: List<UnoCard>.of(playedCards),
+        cardStack: List<UnoCard>.of(cardStack),
+        currentColor: enumToJson<UnoCardColor>(currentColor),
         play: play
       };
 }
@@ -492,7 +515,7 @@ class UnoPlayerState implements ProductType {
       : super();
 
   factory UnoPlayerState.fromJson(Object json) => UnoPlayerState(
-      (json as Map<String, Object?>)[r"id"] as UnoPlayerId,
+      UnoPlayerId((json as Map<String, Object?>)[r"id"] as String),
       (json as Map<String, Object?>)[r"name"] as String,
       (json as Map<String, Object?>)[r"cards"] as UnoCardList,
       (json as Map<String, Object?>)[r"lastPlayTime"] as DateTime,
@@ -503,8 +526,8 @@ class UnoPlayerState implements ProductType {
       ProductRuntimeType([UnoPlayerId, String, UnoCardList, DateTime, bool]);
 
   @override
-  int get hashCode =>
-      Object.hash((UnoPlayerState), id, name, cards, lastPlayTime, didUno);
+  int get hashCode => Object.hash((UnoPlayerState), id, name,
+      _listHash<UnoCard>(cards), lastPlayTime, didUno);
   @override
   bool operator ==(other) =>
       identical(this, other) ||
@@ -512,7 +535,7 @@ class UnoPlayerState implements ProductType {
           true &&
           this.id == other.id &&
           this.name == other.name &&
-          this.cards == other.cards &&
+          _listEquals<UnoCard>(this.cards, other.cards) &&
           this.lastPlayTime == other.lastPlayTime &&
           this.didUno == other.didUno);
 
@@ -534,7 +557,7 @@ class UnoPlayerState implements ProductType {
           didUno.valueOr(this.didUno));
 
   Object toJson() => {
-        id: id,
+        id: id._unwrap,
         name: name,
         cards: cards,
         lastPlayTime: lastPlayTime,
@@ -741,14 +764,22 @@ class UnoPlaying extends UnoPlayState {
       (json as Map<String, Object?>)[r"startTime"] as DateTime,
       (json as Map<String, Object?>)[r"playStartTime"] as DateTime,
       (json as Map<String, Object?>)[r"playRemainingDuration"] as Duration,
-      (json as Map<String, Object?>)[r"currentPlayer"] as UnoPlayerId,
-      (json as Map<String, Object?>)[r"direction"] as UnoDirection,
-      (json as Map<String, Object?>)[r"stackingPluses"]
-          as Queue<AnPlusTwoOrAnPlusFour>);
+      UnoPlayerId((json as Map<String, Object?>)[r"currentPlayer"] as String),
+      enumFromJson<UnoDirection>(
+          (json as Map<String, Object?>)[r"direction"], UnoDirection.values),
+      Queue<AnPlusTwoOrAnPlusFour>.of(
+          ((json as Map<String, Object?>)[r"stackingPluses"] as List<Object?>)
+              .map((e) => AnPlusTwoOrAnPlusFour.fromJson(e!))));
 
   @override
-  int get hashCode => Object.hash((UnoPlaying), startTime, playStartTime,
-      playRemainingDuration, currentPlayer, direction, stackingPluses);
+  int get hashCode => Object.hash(
+      (UnoPlaying),
+      startTime,
+      playStartTime,
+      playRemainingDuration,
+      currentPlayer,
+      direction,
+      _itHash<AnPlusTwoOrAnPlusFour>(stackingPluses));
   @override
   bool operator ==(other) =>
       identical(this, other) ||
@@ -759,7 +790,8 @@ class UnoPlaying extends UnoPlayState {
           this.playRemainingDuration == other.playRemainingDuration &&
           this.currentPlayer == other.currentPlayer &&
           this.direction == other.direction &&
-          this.stackingPluses == other.stackingPluses);
+          _itEquals<AnPlusTwoOrAnPlusFour>(
+              this.stackingPluses, other.stackingPluses));
 
   @override
   String toString() =>
@@ -789,9 +821,9 @@ class UnoPlaying extends UnoPlayState {
         startTime: startTime,
         playStartTime: playStartTime,
         playRemainingDuration: playRemainingDuration,
-        currentPlayer: currentPlayer,
-        direction: direction,
-        stackingPluses: stackingPluses
+        currentPlayer: currentPlayer._unwrap,
+        direction: enumToJson<UnoDirection>(direction),
+        stackingPluses: List<AnPlusTwoOrAnPlusFour>.of(stackingPluses)
       };
 
   @override
@@ -841,7 +873,7 @@ class UnoFinished extends UnoPlayState {
       : super._();
 
   factory UnoFinished.fromJson(Object json) => UnoFinished(
-      (json as Map<String, Object?>)[r"winner"] as UnoPlayerId,
+      UnoPlayerId((json as Map<String, Object?>)[r"winner"] as String),
       (json as Map<String, Object?>)[r"duration"] as Duration);
 
   @override
@@ -865,7 +897,8 @@ class UnoFinished extends UnoPlayState {
   @override
   final $UnoPlayStateType $type = $UnoPlayStateType.UnoFinished;
 
-  Object toJson() => {$type: $type.name, winner: winner, duration: duration};
+  Object toJson() =>
+      {$type: $type.name, winner: winner._unwrap, duration: duration};
 
   @override
   R visit<R extends Object?>(
@@ -1024,7 +1057,11 @@ class PlayCard extends UnoEvent {
 
   factory PlayCard.fromJson(Object json) => PlayCard(
       (json as Map<String, Object?>)[r"cardIndex"] as int,
-      (json as Map<String, Object?>)[r"chosenWildcardColor"] as UnoCardColor?);
+      (json as Map<String, Object?>)[r"chosenWildcardColor"] == null
+          ? null
+          : enumFromJson<UnoCardColor>(
+              (json as Map<String, Object?>)[r"chosenWildcardColor"],
+              UnoCardColor.values));
 
   @override
   int get hashCode => Object.hash((PlayCard), cardIndex, chosenWildcardColor);
@@ -1051,7 +1088,9 @@ class PlayCard extends UnoEvent {
   Object toJson() => {
         $type: $type.name,
         cardIndex: cardIndex,
-        chosenWildcardColor: chosenWildcardColor
+        chosenWildcardColor: chosenWildcardColor == null
+            ? null
+            : enumToJson<UnoCardColor>(chosenWildcardColor!)
       };
 
   @override
@@ -1114,7 +1153,7 @@ class AddPlayer extends UnoEvent {
   const AddPlayer.named({required this.id, required this.name}) : super._();
 
   factory AddPlayer.fromJson(Object json) => AddPlayer(
-      (json as Map<String, Object?>)[r"id"] as UnoPlayerId,
+      UnoPlayerId((json as Map<String, Object?>)[r"id"] as String),
       (json as Map<String, Object?>)[r"name"] as String);
 
   @override
@@ -1138,7 +1177,7 @@ class AddPlayer extends UnoEvent {
   @override
   final $UnoEventType $type = $UnoEventType.AddPlayer;
 
-  Object toJson() => {$type: $type.name, id: id, name: name};
+  Object toJson() => {$type: $type.name, id: id._unwrap, name: name};
 
   @override
   R visit<R extends Object?>(
@@ -1165,7 +1204,7 @@ class ChangePlayerName extends UnoEvent {
       : super._();
 
   factory ChangePlayerName.fromJson(Object json) => ChangePlayerName(
-      (json as Map<String, Object?>)[r"id"] as UnoPlayerId,
+      UnoPlayerId((json as Map<String, Object?>)[r"id"] as String),
       (json as Map<String, Object?>)[r"name"] as String);
 
   @override
@@ -1189,7 +1228,7 @@ class ChangePlayerName extends UnoEvent {
   @override
   final $UnoEventType $type = $UnoEventType.ChangePlayerName;
 
-  Object toJson() => {$type: $type.name, id: id, name: name};
+  Object toJson() => {$type: $type.name, id: id._unwrap, name: name};
 
   @override
   R visit<R extends Object?>(
@@ -1213,8 +1252,8 @@ class RemovePlayer extends UnoEvent {
 
   const RemovePlayer.named({required this.id}) : super._();
 
-  factory RemovePlayer.fromJson(Object json) =>
-      RemovePlayer((json as Map<String, Object?>)[r"id"] as UnoPlayerId);
+  factory RemovePlayer.fromJson(Object json) => RemovePlayer(
+      UnoPlayerId((json as Map<String, Object?>)[r"id"] as String));
 
   @override
   int get hashCode => Object.hash((RemovePlayer), id);
@@ -1232,7 +1271,7 @@ class RemovePlayer extends UnoEvent {
   @override
   final $UnoEventType $type = $UnoEventType.RemovePlayer;
 
-  Object toJson() => {$type: $type.name, id: id};
+  Object toJson() => {$type: $type.name, id: id._unwrap};
 
   @override
   R visit<R extends Object?>(
@@ -1329,7 +1368,7 @@ class PlayerSnitchedUno extends UnoEvent {
   const PlayerSnitchedUno.named({required this.player}) : super._();
 
   factory PlayerSnitchedUno.fromJson(Object json) => PlayerSnitchedUno(
-      (json as Map<String, Object?>)[r"player"] as UnoPlayerId);
+      UnoPlayerId((json as Map<String, Object?>)[r"player"] as String));
 
   @override
   int get hashCode => Object.hash((PlayerSnitchedUno), player);
@@ -1348,7 +1387,7 @@ class PlayerSnitchedUno extends UnoEvent {
   @override
   final $UnoEventType $type = $UnoEventType.PlayerSnitchedUno;
 
-  Object toJson() => {$type: $type.name, player: player};
+  Object toJson() => {$type: $type.name, player: player._unwrap};
 
   @override
   R visit<R extends Object?>(

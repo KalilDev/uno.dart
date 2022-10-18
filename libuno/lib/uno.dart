@@ -6,6 +6,18 @@ import 'package:kalil_utils/utils.dart' hide Tuple;
 import 'dart:collection';
 part 'uno.g.dart';
 
+T enumFromJson<T extends Enum>(Object? value, List<T> values) =>
+    values.singleWhere((e) => e.name == value);
+
+String enumToJson<T extends Enum>(T value) => value.name;
+
+bool _itEquals<T>(Iterable<T>? a, Iterable<T>? b) =>
+    IterableEquality<T>().equals(a, b);
+int _itHash<T>(Iterable<T>? obj) => IterableEquality<T>().hash(obj);
+
+bool _listEquals<T>(List<T>? a, List<T>? b) => ListEquality<T>().equals(a, b);
+int _listHash<T>(List<T>? obj) => ListEquality<T>().hash(obj);
+
 enum UnoCardColor {
   green,
   blue,
@@ -13,15 +25,28 @@ enum UnoCardColor {
   red,
 }
 
+const UnoCardColorT = T(
+  #UnoCardColor,
+  fromJson: 'enumFromJson<UnoCardColor>({}, UnoCardColor.values)',
+  toJson: 'enumToJson<UnoCardColor>({})',
+);
+
+const nUnoCardColorT = T.n(
+  #UnoCardColor,
+  fromJson:
+      '{} == null ? null : enumFromJson<UnoCardColor>({}, UnoCardColor.values)',
+  toJson: '{} == null ? null : enumToJson<UnoCardColor>({}!)',
+);
+
 @data(
   #UnoCard,
   [],
   Union(
     {
-      #DefaultCard: {#color: T(#UnoCardColor), #number: T(#int)},
-      #ReverseCard: {#color: T(#UnoCardColor)},
-      #BlockCard: {#color: T(#UnoCardColor)},
-      #PlusTwoCard: {#color: T(#UnoCardColor)},
+      #DefaultCard: {#color: UnoCardColorT, #number: T(#int)},
+      #ReverseCard: {#color: UnoCardColorT},
+      #BlockCard: {#color: UnoCardColorT},
+      #PlusTwoCard: {#color: UnoCardColorT},
       #PlusFourCard: {},
       #RainbowCard: {},
     },
@@ -30,9 +55,24 @@ enum UnoCardColor {
   deriveFromJson: true,
 )
 const Type _UnoCard = UnoCard;
+const UnoCardT = T(#UnoCard, fromJson: 'UnoCard.fromJson({})');
 
 typedef UnoCards = Queue<UnoCard>;
+const UnoCardsT = T(
+  #UnoCards,
+  fromJson:
+      'UnoCards.of(({} as List<Object?>).map((e) => UnoCard.fromJson(e!)))',
+  toJson: 'List<UnoCard>.of({})',
+  equality: '_itEquals<UnoCard>({a}, {b})',
+  hash: '_itHash<UnoCard>({})',
+);
+
 typedef UnoCardList = List<UnoCard>;
+const UnoCardListT = T(
+  #UnoCardList,
+  equality: '_listEquals<UnoCard>({a}, {b})',
+  hash: '_listHash<UnoCard>({})',
+);
 
 @data(
   #UnoPlayerId,
@@ -44,17 +84,22 @@ typedef UnoCardList = List<UnoCard>;
   deriveFromJson: true,
 )
 const Type _UnoPlayerId = UnoPlayerId;
+const UnoPlayerIdT = T(
+  #UnoPlayerId,
+  fromJson: 'UnoPlayerId({} as String)',
+  toJson: '{}._unwrap',
+);
 
 @data(
   #UnoState,
   [],
   Record(
     {
-      #players: T(#PlayerStates),
-      #playedCards: T(#UnoCards),
-      #cardStack: T(#UnoCards),
-      #currentColor: T(#UnoCardColor),
-      #play: T(#UnoPlayState),
+      #players: PlayerStatesT,
+      #playedCards: UnoCardsT,
+      #cardStack: UnoCardsT,
+      #currentColor: UnoCardColorT,
+      #play: UnoPlayStateT,
     },
   ),
   deriveFromJson: true,
@@ -66,9 +111,9 @@ const Type _UnoState = UnoState;
   [],
   Record(
     {
-      #id: T(#UnoPlayerId),
+      #id: UnoPlayerIdT,
       #name: T(#String),
-      #cards: T(#UnoCardList),
+      #cards: UnoCardListT,
       #lastPlayTime: T(#DateTime),
       #didUno: T(#bool),
     },
@@ -78,9 +123,22 @@ const Type _UnoState = UnoState;
 const Type _UnoPlayerState = UnoPlayerState;
 
 typedef PlayerStates = Map<UnoPlayerId, UnoPlayerState>;
+const PlayerStatesT = T(
+  #PlayerStates,
+  toJson: '{}.map((id, v) => MapEntry(id.toJson(),  v))',
+  fromJson: '''({} as Map<String, Object?>)
+              .map((id,v) =>
+                MapEntry(UnoPlayerId.fromJson(id), UnoPlayerState.fromJson(v!))
+              )''',
+);
 
 enum UnoDirection { clockwise, counterClockwise }
 
+const UnoDirectionT = T(
+  #UnoDirection,
+  fromJson: 'enumFromJson<UnoDirection>({}, UnoDirection.values)',
+  toJson: 'enumToJson<UnoDirection>({})',
+);
 @data(
   #AnPlusTwoOrAnPlusFour,
   [],
@@ -95,7 +153,15 @@ enum UnoDirection { clockwise, counterClockwise }
 const Type _AnPlusTwoOrAnPlusFour = AnPlusTwoOrAnPlusFour;
 
 typedef PlusTwosOrPlusFours = Queue<AnPlusTwoOrAnPlusFour>;
-
+const PlusTwosOrPlusFoursT = T(
+  #Queue,
+  args: [T(#AnPlusTwoOrAnPlusFour)],
+  fromJson:
+      'Queue<AnPlusTwoOrAnPlusFour>.of(({} as List<Object?>).map((e) => AnPlusTwoOrAnPlusFour.fromJson(e!)))',
+  toJson: 'List<AnPlusTwoOrAnPlusFour>.of({})',
+  equality: '_itEquals<AnPlusTwoOrAnPlusFour>({a}, {b})',
+  hash: '_itHash<AnPlusTwoOrAnPlusFour>({})',
+);
 @data(
   #UnoPlayState,
   [],
@@ -104,16 +170,17 @@ typedef PlusTwosOrPlusFours = Queue<AnPlusTwoOrAnPlusFour>;
       #startTime: T(#DateTime),
       #playStartTime: T(#DateTime),
       #playRemainingDuration: T(#Duration),
-      #currentPlayer: T(#UnoPlayerId),
-      #direction: T(#UnoDirection),
-      #stackingPluses: T(#Queue, args: [T(#AnPlusTwoOrAnPlusFour)]),
+      #currentPlayer: UnoPlayerIdT,
+      #direction: UnoDirectionT,
+      #stackingPluses: PlusTwosOrPlusFoursT,
     },
     #UnoWaitingStart: {},
-    #UnoFinished: {#winner: T(#UnoPlayerId), #duration: T(#Duration)},
+    #UnoFinished: {#winner: UnoPlayerIdT, #duration: T(#Duration)},
   }),
   deriveFromJson: true,
 )
 const Type _UnoPlayState = UnoPlayState;
+const UnoPlayStateT = T(#UnoPlayState, fromJson: 'UnoPlayState.fromJson({}!)');
 
 @data(
   #UnoEvent,
@@ -123,15 +190,15 @@ const Type _UnoPlayState = UnoPlayState;
       #StartGame: {},
       #PlayCard: {
         #cardIndex: T(#int),
-        #chosenWildcardColor: T.n(#UnoCardColor),
+        #chosenWildcardColor: nUnoCardColorT,
       },
       #SayUno: {},
-      #AddPlayer: {#id: T(#UnoPlayerId), #name: T(#String)},
-      #ChangePlayerName: {#id: T(#UnoPlayerId), #name: T(#String)},
-      #RemovePlayer: {#id: T(#UnoPlayerId)},
+      #AddPlayer: {#id: UnoPlayerIdT, #name: T(#String)},
+      #ChangePlayerName: {#id: UnoPlayerIdT, #name: T(#String)},
+      #RemovePlayer: {#id: UnoPlayerIdT},
       #TimePassed: {},
       #PlayerDrewCard: {},
-      #PlayerSnitchedUno: {#player: T(#UnoPlayerId)}
+      #PlayerSnitchedUno: {#player: UnoPlayerIdT}
     },
   ),
   deriveFromJson: true,
@@ -142,8 +209,8 @@ abstract class UnoStateMachine {
   UnoState get currentState;
   set currentState(UnoState state);
   Stream<UnoState> get state;
-  void dispatch(UnoEvent event);
-  UnoState reduce(UnoState state, UnoEvent event);
+  bool dispatch(UnoEvent event);
+  MaybeNextState reduce(UnoState state, UnoEvent event);
 }
 
 List<T> twice<T>(T value) => [value, value];
@@ -283,6 +350,8 @@ UnoCardColor cardColor(UnoCard card, [UnoCardColor? onWild]) {
 
 enum PlayStateModification { none, blockPlayer, reverseDirection }
 
+typedef MaybeNextState = Maybe<UnoState>;
+
 extension on UnoDirection {
   UnoDirection reverse() {
     switch (this) {
@@ -343,6 +412,9 @@ class ActualUnoStateMachine extends UnoStateMachine {
 
   @override
   set currentState(UnoState nextState) {
+    if (_currentState == nextState) {
+      return;
+    }
     _currentState = nextState;
     for (final listener in _listeners) {
       listener.add(nextState);
@@ -357,17 +429,24 @@ class ActualUnoStateMachine extends UnoStateMachine {
     return controller.stream;
   }
 
-  void dispatch(UnoEvent event) => currentState = reduce(currentState, event);
+  bool dispatch(UnoEvent event) {
+    final s = reduce(currentState, event);
+    s.visit(
+      just: (state) => currentState = state,
+      none: () {},
+    );
+    return s is Just;
+  }
 
-  UnoState reduce(UnoState state, UnoEvent event) {
-    UnoState changePlayerName(UnoPlayerId id, String name) {
+  MaybeNextState reduce(UnoState state, UnoEvent event) {
+    MaybeNextState changePlayerName(UnoPlayerId id, String name) {
       final oldPlayer = state.players[id];
       if (oldPlayer == null) {
-        return state;
+        return None();
       }
       final newPlayers = PlayerStates.of(state.players);
       newPlayers[id] = oldPlayer.copyWith(name: name.just);
-      return state.copyWith(players: newPlayers.just);
+      return state.copyWith(players: newPlayers.just).just;
     }
 
     UnoPlayState skipPlayer(UnoPlaying playState) => playState.copyWith(
@@ -381,31 +460,33 @@ class ActualUnoStateMachine extends UnoStateMachine {
           stackingPluses: PlusTwosOrPlusFours().just,
         );
 
-    UnoState removePlayer(UnoPlayerId id) {
+    MaybeNextState removePlayer(UnoPlayerId id) {
       final removedPlayer = state.players[id];
       if (removedPlayer == null) {
-        return state;
+        return None();
       }
       final newPlayers = PlayerStates.of(state.players);
       newPlayers.remove(id);
       final newCardStack = UnoCards.of(state.cardStack);
       newCardStack.addAll(removedPlayer.cards);
-      return state.copyWith(
-        players: newPlayers.just,
-        cardStack: newCardStack.just,
-        play: state.play
-            .visit(
-              unoPlaying: (playState) {
-                if (playState.currentPlayer != id) {
-                  return playState;
-                }
-                return skipPlayer(playState);
-              },
-              unoWaitingStart: identity,
-              unoFinished: identity,
-            )
-            .just,
-      );
+      return state
+          .copyWith(
+            players: newPlayers.just,
+            cardStack: newCardStack.just,
+            play: state.play
+                .visit(
+                  unoPlaying: (playState) {
+                    if (playState.currentPlayer != id) {
+                      return playState;
+                    }
+                    return skipPlayer(playState);
+                  },
+                  unoWaitingStart: identity,
+                  unoFinished: identity,
+                )
+                .just,
+          )
+          .just;
     }
 
     UnoPlaying continuePlaying(
@@ -501,15 +582,15 @@ class ActualUnoStateMachine extends UnoStateMachine {
 
     return state.play.visit(
       unoPlaying: (playState) => event.visit(
-        startGame: () => state,
+        startGame: () => None(),
         playCard: (i, chosenWildcardColor) {
           final oldPlayer = state.players[playState.currentPlayer]!;
           if (i >= oldPlayer.cards.length) {
-            return state;
+            return None();
           }
           final card = oldPlayer.cards[i];
           if (isWildcard(card) && chosenWildcardColor == null) {
-            return state;
+            return None();
           }
 
           if (playState.stackingPluses.isNotEmpty) {
@@ -530,7 +611,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
               rainbowCard: (_) => false,
             );
             if (!canStack) {
-              return state;
+              return None();
             }
             final newPlayersAndPlayedCards = playCard(
               state.players,
@@ -553,7 +634,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
                 PlayStateModification.none,
                 newStackingPluses,
               ),
-            );
+            ).just;
           }
           final lastCard = state.playedCards.last;
           final canPlay = card.visitC(
@@ -570,7 +651,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
             rainbowCard: () => true,
           );
           if (!canPlay) {
-            return state;
+            return None();
           }
 
           final newStackingPluses =
@@ -602,18 +683,16 @@ class ActualUnoStateMachine extends UnoStateMachine {
               playStateModification,
               newStackingPluses,
             ),
-          );
+          ).just;
         },
         sayUno: () {
           final oldPlayer = state.players[playState.currentPlayer]!;
           final newPlayer = oldPlayer.copyWith(didUno: true.just);
           final newPlayers = modifyPlayerState(state.players, newPlayer);
 
-          return state.copyWith(
-            players: newPlayers.just,
-          );
+          return state.copyWith(players: newPlayers.just).just;
         },
-        addPlayer: (_, __) => state,
+        addPlayer: (_, __) => None(),
         changePlayerName: changePlayerName,
         removePlayer: removePlayer,
         timePassed: () {
@@ -625,9 +704,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
               playRemainingDuration:
                   (playDuration - durationSincePlayStart).just,
             );
-            return state.copyWith(
-              play: newPlayState.just,
-            );
+            return state.copyWith(play: newPlayState.just).just;
           }
           final eatCount = playState.stackingPluses.isEmpty
               ? 1
@@ -663,7 +740,7 @@ class ActualUnoStateMachine extends UnoStateMachine {
             cardStack: eatenCardState.e2,
             currentColor: state.currentColor,
             play: newPlayState,
-          );
+          ).just;
         },
         playerDrewCard: () {
           final count = playState.stackingPluses.isEmpty
@@ -695,20 +772,20 @@ class ActualUnoStateMachine extends UnoStateMachine {
             cardStack: eatenCardState.e2,
             currentColor: state.currentColor,
             play: skipPlayer(playState),
-          );
+          ).just;
         },
         playerSnitchedUno: (player) {
           var playerState = state.players[player];
           if (playerState == null) {
-            return state;
+            return None();
           }
           final now = DateTime.now();
           final timeSinceLastPlay = now.difference(playerState.lastPlayTime);
           if (timeSinceLastPlay > unoSnitchTime) {
-            return state;
+            return None();
           }
           if (playerState.didUno) {
-            return state;
+            return None();
           }
           final eatenCardState = makePlayerEatCards(
             PlayersPlayedCardsAndCardStack(
@@ -725,27 +802,29 @@ class ActualUnoStateMachine extends UnoStateMachine {
             cardStack: eatenCardState.e2,
             currentColor: state.currentColor,
             play: playState,
-          );
+          ).just;
         },
       ),
       unoWaitingStart: (_) => event.visit(
         startGame: () {
           if (state.players.isEmpty) {
-            return state;
+            return None();
           }
-          return state.copyWith(
-            play: UnoPlaying(
-              DateTime.now(),
-              DateTime.now(),
-              Duration(seconds: 30),
-              state.players.keys.first,
-              UnoDirection.clockwise,
-              PlusTwosOrPlusFours(),
-            ).just,
-          );
+          return state
+              .copyWith(
+                play: UnoPlaying(
+                  DateTime.now(),
+                  DateTime.now(),
+                  Duration(seconds: 30),
+                  state.players.keys.first,
+                  UnoDirection.clockwise,
+                  PlusTwosOrPlusFours(),
+                ).just,
+              )
+              .just;
         },
-        playCard: (_, __) => state,
-        sayUno: () => state,
+        playCard: (_, __) => None(),
+        sayUno: () => None(),
         addPlayer: (id, name) {
           final newCardStack = UnoCards.of(state.cardStack);
           final cards = UnoCardList.of(newCardStack.take(cardsInHand));
@@ -757,26 +836,24 @@ class ActualUnoStateMachine extends UnoStateMachine {
             didUno: false,
           );
           final newPlayers = modifyPlayerState(state.players, newPlayer);
-          return state.copyWith(
-            players: newPlayers.just,
-          );
+          return state.copyWith(players: newPlayers.just).just;
         },
         changePlayerName: changePlayerName,
         removePlayer: removePlayer,
-        timePassed: () => state,
-        playerDrewCard: () => state,
-        playerSnitchedUno: (_) => state,
+        timePassed: () => None(),
+        playerDrewCard: () => None(),
+        playerSnitchedUno: (_) => None(),
       ),
       unoFinished: (_) => event.visit(
-        startGame: () => state,
-        playCard: (_, __) => state,
-        sayUno: () => state,
-        addPlayer: (_, __) => state,
+        startGame: () => None(),
+        playCard: (_, __) => None(),
+        sayUno: () => None(),
+        addPlayer: (_, __) => None(),
         changePlayerName: changePlayerName,
         removePlayer: removePlayer,
-        timePassed: () => state,
-        playerDrewCard: () => state,
-        playerSnitchedUno: (_) => state,
+        timePassed: () => None(),
+        playerDrewCard: () => None(),
+        playerSnitchedUno: (_) => None(),
       ),
     );
   }
