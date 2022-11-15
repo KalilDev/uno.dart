@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'uno.dart';
+part of 'data.dart';
 
 // **************************************************************************
 // AdtGenerator
@@ -454,8 +454,8 @@ class UnoState implements ProductType {
   int get hashCode => Object.hash(
       (UnoState),
       players,
-      _itHash<UnoCard>(playedCards),
-      _itHash<UnoCard>(cardStack),
+      itHash<UnoCard>(playedCards),
+      itHash<UnoCard>(cardStack),
       currentColor,
       play);
   @override
@@ -464,8 +464,8 @@ class UnoState implements ProductType {
       (other is UnoState &&
           true &&
           this.players == other.players &&
-          _itEquals<UnoCard>(this.playedCards, other.playedCards) &&
-          _itEquals<UnoCard>(this.cardStack, other.cardStack) &&
+          itEquals<UnoCard>(this.playedCards, other.playedCards) &&
+          itEquals<UnoCard>(this.cardStack, other.cardStack) &&
           this.currentColor == other.currentColor &&
           this.play == other.play);
 
@@ -557,7 +557,7 @@ class UnoPlayerState implements ProductType {
           didUno.valueOr(this.didUno));
 
   Object toJson() => {
-        id: id._unwrap,
+        id: id.unwrap,
         name: name,
         cards: cards,
         lastPlayTime: lastPlayTime,
@@ -779,7 +779,7 @@ class UnoPlaying extends UnoPlayState {
       playRemainingDuration,
       currentPlayer,
       direction,
-      _itHash<AnPlusTwoOrAnPlusFour>(stackingPluses));
+      itHash<AnPlusTwoOrAnPlusFour>(stackingPluses));
   @override
   bool operator ==(other) =>
       identical(this, other) ||
@@ -790,7 +790,7 @@ class UnoPlaying extends UnoPlayState {
           this.playRemainingDuration == other.playRemainingDuration &&
           this.currentPlayer == other.currentPlayer &&
           this.direction == other.direction &&
-          _itEquals<AnPlusTwoOrAnPlusFour>(
+          itEquals<AnPlusTwoOrAnPlusFour>(
               this.stackingPluses, other.stackingPluses));
 
   @override
@@ -821,7 +821,7 @@ class UnoPlaying extends UnoPlayState {
         startTime: startTime,
         playStartTime: playStartTime,
         playRemainingDuration: playRemainingDuration,
-        currentPlayer: currentPlayer._unwrap,
+        currentPlayer: currentPlayer.unwrap,
         direction: enumToJson<UnoDirection>(direction),
         stackingPluses: List<AnPlusTwoOrAnPlusFour>.of(stackingPluses)
       };
@@ -898,7 +898,7 @@ class UnoFinished extends UnoPlayState {
   final $UnoPlayStateType $type = $UnoPlayStateType.UnoFinished;
 
   Object toJson() =>
-      {$type: $type.name, winner: winner._unwrap, duration: duration};
+      {$type: $type.name, winner: winner.unwrap, duration: duration};
 
   @override
   R visit<R extends Object?>(
@@ -1177,7 +1177,7 @@ class AddPlayer extends UnoEvent {
   @override
   final $UnoEventType $type = $UnoEventType.AddPlayer;
 
-  Object toJson() => {$type: $type.name, id: id._unwrap, name: name};
+  Object toJson() => {$type: $type.name, id: id.unwrap, name: name};
 
   @override
   R visit<R extends Object?>(
@@ -1228,7 +1228,7 @@ class ChangePlayerName extends UnoEvent {
   @override
   final $UnoEventType $type = $UnoEventType.ChangePlayerName;
 
-  Object toJson() => {$type: $type.name, id: id._unwrap, name: name};
+  Object toJson() => {$type: $type.name, id: id.unwrap, name: name};
 
   @override
   R visit<R extends Object?>(
@@ -1271,7 +1271,7 @@ class RemovePlayer extends UnoEvent {
   @override
   final $UnoEventType $type = $UnoEventType.RemovePlayer;
 
-  Object toJson() => {$type: $type.name, id: id._unwrap};
+  Object toJson() => {$type: $type.name, id: id.unwrap};
 
   @override
   R visit<R extends Object?>(
@@ -1387,7 +1387,7 @@ class PlayerSnitchedUno extends UnoEvent {
   @override
   final $UnoEventType $type = $UnoEventType.PlayerSnitchedUno;
 
-  Object toJson() => {$type: $type.name, player: player._unwrap};
+  Object toJson() => {$type: $type.name, player: player.unwrap};
 
   @override
   R visit<R extends Object?>(
@@ -1402,50 +1402,4 @@ class PlayerSnitchedUno extends UnoEvent {
           required R Function() playerDrewCard,
           required R Function(UnoPlayerId player) playerSnitchedUno}) =>
       playerSnitchedUno(this.player);
-}
-
-class PlayersPlayedCardsAndCardStack
-    implements ProductType, TupleN3<PlayerStates, UnoCards, UnoCards> {
-  final PlayerStates e0;
-  final UnoCards e1;
-  final UnoCards e2;
-
-  const PlayersPlayedCardsAndCardStack(this.e0, this.e1, this.e2) : super();
-
-  factory PlayersPlayedCardsAndCardStack.fromJson(Object json) =>
-      PlayersPlayedCardsAndCardStack(
-          (json as List<Object?>)[0] as PlayerStates,
-          (json as List<Object?>)[1] as UnoCards,
-          (json as List<Object?>)[2] as UnoCards);
-
-  factory PlayersPlayedCardsAndCardStack.fromTupleN(
-          TupleN3<PlayerStates, UnoCards, UnoCards> tpl) =>
-      PlayersPlayedCardsAndCardStack(tpl.e0, tpl.e1, tpl.e2);
-
-  @override
-  ProductRuntimeType get runtimeType =>
-      ProductRuntimeType([PlayerStates, UnoCards, UnoCards]);
-
-  @override
-  int get hashCode => Object.hash((PlayersPlayedCardsAndCardStack), e0, e1, e2);
-  @override
-  bool operator ==(other) =>
-      identical(this, other) ||
-      (other is PlayersPlayedCardsAndCardStack &&
-          true &&
-          this.e0 == other.e0 &&
-          this.e1 == other.e1 &&
-          this.e2 == other.e2);
-
-  @override
-  String toString() => "PlayersPlayedCardsAndCardStack ($e0, $e1, $e2)";
-
-  PlayersPlayedCardsAndCardStack copyWith(
-          {Maybe<PlayerStates> e0 = const Maybe.none(),
-          Maybe<UnoCards> e1 = const Maybe.none(),
-          Maybe<UnoCards> e2 = const Maybe.none()}) =>
-      PlayersPlayedCardsAndCardStack(
-          e0.valueOr(this.e0), e1.valueOr(this.e1), e2.valueOr(this.e2));
-
-  Object toJson() => [e0, e1, e2];
 }
