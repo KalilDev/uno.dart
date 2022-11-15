@@ -280,6 +280,11 @@ PlayersPlayedCardsAndCardStack makePlayerEatCards(
   PlayersPlayedCardsAndCardStack drawSingle(
     PlayersPlayedCardsAndCardStack state,
   ) {
+    // If the card stack is empty and there is only one played card, we cannot
+    // draw any cards.
+    if (state.e2.isEmpty && state.e1.length <= 1) {
+      return state;
+    }
     final newCardStack = UnoCards.of(state.e2);
     final newPlayers = PlayerStates.of(state.e0);
     final card = newCardStack.removeLast();
