@@ -11,6 +11,7 @@ dependencies:
   kalil_utils:
   collection:
   uuid:
+  ffi:
 
 dev_dependencies:
   adt_generator: ^3.0.9
