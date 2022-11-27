@@ -1,10 +1,17 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:app/color_scheme.dart';
+import 'package:app/vector.dart' as vd;
 import 'package:flutter/material.dart';
 import 'package:kalil_utils/utils.dart';
+import 'package:libuno/client.dart';
 import 'package:libuno/uno.dart';
 import 'package:material_widgets/material_widgets.dart';
+import 'package:vector_drawable/vector_drawable.dart' hide Path;
+import 'package:vector_math/vector_math_64.dart' hide Vector;
+
+import '3d_stack.dart';
 
 void main() {
   runDynamicallyThemedApp(const MyApp(), fallback: () => baseline3PCorePalette);
@@ -25,6 +32,8 @@ extension on UnoAppColorScheme {
   }
 }
 
+final addPlayer = server.addPlayer("Pedro");
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -41,11 +50,33 @@ class MyApp extends StatelessWidget {
             AnimatedMonetColorSchemes<UnoAppColorScheme, UnoAppColorTheme>(
           child: home!,
         ),
-        home: const MyHomePage(title: 'Flutter Demo Home Page'),
+        home: FutureBuilder(
+            future: addPlayer,
+            builder: (context, id) => id.hasData
+                ? MyHomePage(client: DirectClient(id.requireData, server))
+                : CircularProgressIndicator()),
       ),
     );
   }
 }
+
+Map<String, Color> styleMappings() => {
+      "background": vd.blackC,
+      "foreground": vd.whiteC,
+      "green": vd.greenC,
+      "yellow": vd.yellowC,
+      "blue": vd.blueC,
+      "red": vd.redC,
+    };
+
+Map<String, Color> md3StyleMappingsFromScheme(UnoAppColorScheme colors) => {
+      "background": vd.blackC,
+      "foreground": vd.whiteC,
+      "green": colors.green.color,
+      "yellow": colors.yellow.color,
+      "blue": colors.blue.color,
+      "red": colors.red.color,
+    };
 
 class UnoCardW extends StatelessWidget {
   const UnoCardW({
@@ -56,33 +87,160 @@ class UnoCardW extends StatelessWidget {
   final UnoCard card;
   final VoidCallback? onPressed;
 
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColorScheme;
-    final color = card.visitC(
-      defaultCard: (color, _) => colors.fromUnoCardColor(color),
-      reverseCard: colors.fromUnoCardColor,
-      blockCard: colors.fromUnoCardColor,
-      plusTwoCard: colors.fromUnoCardColor,
-      plusFourCard: () => colors.black,
-      rainbowCard: () => colors.black,
-    );
-    final content = card.visitC(
-      defaultCard: (_, number) => Text(number.toString()),
-      reverseCard: (_) => Icon(Icons.refresh),
-      blockCard: (_) => Icon(Icons.block),
-      plusTwoCard: (_) => Text("+2"),
-      plusFourCard: () => Text("+4"),
-      rainbowCard: () => Text("🏳️‍🌈"),
-    );
-    return ColoredCard(
-      color: color,
-      child: Center(
-        child: content,
-      ),
-      onPressed: onPressed,
+  VectorDrawable _vectorForCard() => card.visitC(
+        defaultCard: (c, i) => vd.numberedCards[i],
+        reverseCard: (c) => vd.reverse,
+        blockCard: (c) => vd.block,
+        plusTwoCard: (c) => vd.plusTwo,
+        plusFourCard: () => vd.plusFour,
+        rainbowCard: () => vd.rainbow,
+      );
+
+  StyleResolver _mappingForC(UnoCardColor unoColor) {
+    final Color color;
+    switch (unoColor) {
+      case UnoCardColor.green:
+        color = vd.greenC;
+        break;
+      case UnoCardColor.blue:
+        color = vd.blueC;
+        break;
+      case UnoCardColor.yellow:
+        color = vd.yellowC;
+        break;
+      case UnoCardColor.red:
+        color = vd.redC;
+        break;
+    }
+    return StyleMapping.fromMap(
+      {
+        ...styleMappings(),
+        "color": color,
+      },
+      namespace: 'uno',
     );
   }
+
+  StyleResolver _md3MappingForC(BuildContext context, UnoCardColor unoColor) {
+    final CustomColorScheme color;
+    final colors = context.appColorScheme;
+    switch (unoColor) {
+      case UnoCardColor.green:
+        color = colors.green;
+        break;
+      case UnoCardColor.blue:
+        color = colors.blue;
+        break;
+      case UnoCardColor.yellow:
+        color = colors.yellow;
+        break;
+      case UnoCardColor.red:
+        color = colors.red;
+        break;
+    }
+    return StyleMapping.fromMap(
+      {
+        ...md3StyleMappingsFromScheme(colors),
+        "color": color.colorContainer,
+        "foreground": color.onColorContainer
+      },
+      namespace: 'uno',
+    );
+  }
+
+  StyleResolver _styleResolver(BuildContext context, bool md3) => card.visitC(
+        defaultCard: (c, _) =>
+            md3 ? _md3MappingForC(context, c) : _mappingForC(c),
+        reverseCard: md3 ? _md3MappingForC.curry(context) : _mappingForC,
+        blockCard: md3 ? _md3MappingForC.curry(context) : _mappingForC,
+        plusTwoCard: md3 ? _md3MappingForC.curry(context) : _mappingForC,
+        plusFourCard: () => vd.defaultStyleMapping,
+        rainbowCard: () => vd.defaultStyleMapping,
+      );
+
+  @override
+  Widget build(BuildContext context) => PressableCard(
+        vector: _vectorForCard(),
+        styleResolver: _styleResolver(context, false),
+        onPressed: onPressed,
+      );
+}
+
+class PressableCard extends StatelessWidget {
+  const PressableCard({
+    super.key,
+    this.onPressed,
+    required this.vector,
+    required this.styleResolver,
+  });
+  final VoidCallback? onPressed;
+  final VectorDrawable vector;
+  final StyleResolver styleResolver;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = RawVectorWidget(
+      vector: vector.body,
+      styleMapping: styleResolver,
+    );
+    if (onPressed == null) {
+      return w;
+    }
+    return Stack(
+      children: [
+        Positioned.fill(child: w),
+        Positioned.fill(
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onPressed,
+              customBorder: CardShape(),
+              child: SizedBox.expand(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class CardShape extends OutlinedBorder {
+  CardShape({
+    BorderSide side = BorderSide.none,
+  }) : super(side: side);
+  @override
+  OutlinedBorder copyWith({BorderSide? side}) => CardShape(
+        side: side ?? this.side,
+      );
+
+  @override
+  EdgeInsetsGeometry get dimensions => EdgeInsets.all(side.width);
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) =>
+      _shape(rect, textDirection)
+          .getInnerPath(rect, textDirection: textDirection);
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) =>
+      _shape(rect, textDirection)
+          .getOuterPath(rect, textDirection: textDirection);
+
+  OutlinedBorder _shape(Rect rect, TextDirection? textDirection) =>
+      RoundedRectangleBorder(
+        side: side,
+        borderRadius: BorderRadius.circular(
+          4.032 * (rect.width / 62),
+        ),
+      );
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) =>
+      _shape(rect, textDirection)
+          .paint(canvas, rect, textDirection: textDirection);
+
+  @override
+  ShapeBorder scale(double t) => copyWith(side: side.scale(t));
 }
 
 class UnoCardBackW extends StatelessWidget {
@@ -93,15 +251,11 @@ class UnoCardBackW extends StatelessWidget {
   final VoidCallback? onPressed;
 
   @override
-  Widget build(BuildContext context) {
-    return ColoredCard(
-      color: context.appColorScheme.black,
-      child: Center(
-        child: Text("Uno"),
-      ),
-      onPressed: onPressed,
-    );
-  }
+  Widget build(BuildContext context) => PressableCard(
+        vector: vd.back,
+        styleResolver: vd.defaultStyleMapping,
+        onPressed: onPressed,
+      );
 }
 
 class UnoCardContainer extends StatelessWidget {
@@ -124,12 +278,10 @@ class UnoCardListW extends StatelessWidget {
     required this.cards,
     this.onPressed,
     required this.axis,
-    this.isBack = false,
   });
   final UnoCardList cards;
   final ValueChanged<int>? onPressed;
   final Axis axis;
-  final bool isBack;
 
   Widget _buildCard(BuildContext context, int i) => UnoCardContainer(
         child: UnoCardW(
@@ -137,6 +289,27 @@ class UnoCardListW extends StatelessWidget {
           onPressed: onPressed == null ? null : () => onPressed!.call(i),
         ),
       );
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemBuilder: _buildCard,
+      itemCount: cards.length,
+      scrollDirection: axis,
+    );
+  }
+}
+
+class UnoBackCardListW extends StatelessWidget {
+  const UnoBackCardListW({
+    super.key,
+    required this.cards,
+    this.onPressed,
+    required this.axis,
+  });
+  final int cards;
+  final ValueChanged<int>? onPressed;
+  final Axis axis;
 
   Widget _buildBackCard(BuildContext context, int i) => UnoCardContainer(
         child: UnoCardBackW(
@@ -147,8 +320,8 @@ class UnoCardListW extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      itemBuilder: isBack ? _buildBackCard : _buildCard,
-      itemCount: cards.length,
+      itemBuilder: _buildBackCard,
+      itemCount: cards,
       scrollDirection: axis,
     );
   }
@@ -183,29 +356,23 @@ class BackUnoCardsW extends StatelessWidget {
     super.key,
     required this.cards,
     this.onPressed,
+    this.stackDirection,
   });
-  final UnoCards cards;
-  final ValueChanged<int>? onPressed;
+  final int cards;
+  final VoidCallback? onPressed;
+  final Vector2? stackDirection;
 
   @override
-  Widget build(BuildContext context) => Stack(
-        children: [
-          for (final card in cards.indexed)
-            Positioned(
-              child: UnoCardContainer(
-                child: UnoCardBackW(
-                  onPressed: onPressed == null
-                      ? null
-                      : () => onPressed!.call(
-                            card.e0,
-                          ),
-                ),
-              ),
-              left: card.e0 * 2,
-              top: card.e0 * 2,
-            )
-        ],
-      );
+  Widget build(BuildContext context) {
+    return AnimatedStack3D(
+      itemBuilder: (context, i) => UnoCardContainer(
+        child: UnoCardBackW(
+          onPressed: onPressed == null || i != cards - 1 ? null : onPressed!,
+        ),
+      ),
+      itemCount: cards,
+    );
+  }
 }
 
 class UnoCardsW extends StatelessWidget {
@@ -215,29 +382,19 @@ class UnoCardsW extends StatelessWidget {
     this.onPressed,
   });
   final UnoCards cards;
-  final ValueChanged<int>? onPressed;
+  final VoidCallback? onPressed;
 
   @override
-  Widget build(BuildContext context) => Stack(
-        children: [
-          for (final card in reversed(cards).indexed)
-            Positioned(
-              child: UnoCardContainer(
-                child: UnoCardW(
-                  card: card.e1,
-                  onPressed: onPressed == null
-                      ? null
-                      : () => onPressed!.call(
-                            card.e0,
-                          ),
-                ),
-              ),
-              left: 0,
-              top: 0,
-              bottom: card.e0 * 2,
-              right: card.e0 * 2,
-            )
-        ],
+  Widget build(BuildContext context) => AnimatedStack3D(
+        itemBuilder: (context, i) => UnoCardContainer(
+          child: UnoCardW(
+            card: cards.elementAt(i),
+            onPressed:
+                onPressed == null || i != cards.length - 1 ? null : onPressed!,
+          ),
+        ),
+        itemCount: cards.length,
+        itemSeparation: 1,
       );
 }
 
@@ -246,13 +403,13 @@ class CardStackAndPlayedCardsW extends StatelessWidget {
     super.key,
     required this.playedCards,
     this.onPlayedCards,
-    required this.cardStack,
+    required this.cardStackLength,
     this.onCardStack,
   });
   final UnoCards playedCards;
-  final ValueChanged<int>? onPlayedCards;
-  final UnoCards cardStack;
-  final ValueChanged<int>? onCardStack;
+  final VoidCallback? onPlayedCards;
+  final int cardStackLength;
+  final VoidCallback? onCardStack;
 
   @override
   Widget build(BuildContext context) {
@@ -266,8 +423,8 @@ class CardStackAndPlayedCardsW extends StatelessWidget {
           ),
         ),
         UnoCardsContainer(
-          child: UnoCardsW(
-            cards: cardStack,
+          child: BackUnoCardsW(
+            cards: cardStackLength,
             onPressed: onCardStack,
           ),
         ),
@@ -280,8 +437,24 @@ class PlayerW extends StatelessWidget {
   const PlayerW({
     super.key,
     required this.state,
+    this.onCard,
+    required this.isPlaying,
   });
   final UnoPlayerState state;
+  final bool isPlaying;
+  final ValueChanged<int>? onCard;
+
+  Widget _card(BuildContext context, {required Widget child}) {
+    final style = CardStyle(
+      padding: MaterialStateProperty.all(EdgeInsets.all(16)),
+    );
+    return isPlaying
+        ? ColoredCard(
+            color: context.appColorScheme.green,
+            child: child,
+          )
+        : ElevatedCard(child: child);
+  }
 
   Widget _col(BuildContext context) => Column(
         mainAxisSize: MainAxisSize.min,
@@ -289,9 +462,60 @@ class PlayerW extends StatelessWidget {
           Text(state.id.toString()),
           Text(state.name.toString()),
           SizedBox(
-            height: 100,
+            height: 150,
             child: UnoCardListW(
               cards: state.cards,
+              axis: Axis.horizontal,
+              onPressed: onCard,
+            ),
+          ),
+          Text(state.lastPlayTime.toString()),
+          Text('didUno: ${state.didUno}'),
+        ],
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.sizeClass.minimumMargins,
+        vertical: context.sizeClass.minimumMargins / 4,
+      ),
+      child: _card(context, child: _col(context)),
+    );
+  }
+}
+
+class PlayerClientW extends StatelessWidget {
+  const PlayerClientW({
+    super.key,
+    required this.state,
+    required this.isPlaying,
+  });
+  final PlayerClientState state;
+  final bool isPlaying;
+
+  Widget _card(BuildContext context, {required Widget child}) {
+    final style = CardStyle(
+      padding: MaterialStateProperty.all(EdgeInsets.all(16)),
+    );
+    return isPlaying
+        ? ColoredCard(
+            color: context.appColorScheme.blue,
+            child: child,
+          )
+        : ElevatedCard(child: child);
+  }
+
+  Widget _col(BuildContext context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(state.id.toString()),
+          Text(state.name.toString()),
+          SizedBox(
+            height: 120,
+            child: UnoBackCardListW(
+              cards: state.cardCount,
               axis: Axis.horizontal,
             ),
           ),
@@ -307,7 +531,7 @@ class PlayerW extends StatelessWidget {
         horizontal: context.sizeClass.minimumMargins,
         vertical: context.sizeClass.minimumMargins / 4,
       ),
-      child: _col(context),
+      child: _card(context, child: _col(context)),
     );
   }
 }
@@ -375,12 +599,99 @@ class PlayStateW extends StatelessWidget {
   }
 }
 
+class ColorSelectDialog extends StatelessWidget {
+  const ColorSelectDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MD3BasicDialog(
+      title: Text('Selecionar Cor'),
+      content: Column(
+        children: [
+          ColorSelectDialogTile(
+            colorScheme: context.appColorScheme.green,
+            unoColor: UnoCardColor.green,
+            child: Text('Verde'),
+          ),
+          ColorSelectDialogTile(
+            colorScheme: context.appColorScheme.blue,
+            unoColor: UnoCardColor.blue,
+            child: Text('Azul'),
+          ),
+          ColorSelectDialogTile(
+            colorScheme: context.appColorScheme.red,
+            unoColor: UnoCardColor.red,
+            child: Text('Vermelho'),
+          ),
+          ColorSelectDialogTile(
+            colorScheme: context.appColorScheme.yellow,
+            unoColor: UnoCardColor.yellow,
+            child: Text('Amarelo'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancelar'))
+      ],
+    );
+  }
+}
+
+class ColorSelectDialogTile extends StatelessWidget {
+  const ColorSelectDialogTile({
+    Key? key,
+    required this.colorScheme,
+    required this.unoColor,
+    required this.child,
+  }) : super(key: key);
+  final CustomColorScheme colorScheme;
+  final UnoCardColor unoColor;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: colorScheme.colorContainer,
+      borderRadius: BorderRadius.circular(16.0),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16.0),
+        onTap: () => Navigator.of(context).pop(UnoCardColor.green),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: DefaultTextStyle.merge(
+              child: SizedBox(width: double.infinity, child: child),
+              style: TextStyle(color: colorScheme.onColorContainer)),
+        ),
+      ),
+    );
+  }
+}
+
 class StateW extends StatelessWidget {
   const StateW({
     super.key,
     required this.state,
+    required this.onEatCard,
+    required this.onPlayCard,
   });
-  final UnoState state;
+  final UnoClientState state;
+  final VoidCallback onEatCard;
+  final void Function(int, [UnoCardColor?]) onPlayCard;
+  void _playCard(BuildContext context, int i) async {
+    if (!isWildcard(state.player.cards[i])) {
+      onPlayCard(i);
+      return;
+    }
+    final color = await showDialog<UnoCardColor>(
+        context: context, builder: (context) => ColorSelectDialog());
+    if (color == null) {
+      return;
+    }
+    onPlayCard(i, color);
+  }
+
   Widget _col(BuildContext context) => ListView(
         children: [
           PlayStateW(
@@ -388,9 +699,42 @@ class StateW extends StatelessWidget {
           ),
           CardStackAndPlayedCardsW(
             playedCards: state.playedCards,
-            cardStack: state.cardStack,
+            cardStackLength: state.cardStackLength,
+            onCardStack: state.play.visit(
+              unoPlaying: (playing) =>
+                  playing.currentPlayer == state.player.id ? onEatCard : null,
+              unoWaitingStart: (_) => null,
+              unoFinished: (_) => null,
+            ),
           ),
-          for (final player in state.players.values) PlayerW(state: player),
+          for (final player in state.players.values)
+            player.id == state.player.id
+                ? PlayerW(
+                    state: state.player,
+                    onCard: state.play.visit(
+                      unoPlaying: (playing) =>
+                          playing.currentPlayer == player.id
+                              ? _playCard.curry(context)
+                              : null,
+                      unoWaitingStart: (_) => null,
+                      unoFinished: (_) => null,
+                    ),
+                    isPlaying: state.play.visit(
+                      unoPlaying: (playing) =>
+                          playing.currentPlayer == player.id,
+                      unoWaitingStart: (_) => false,
+                      unoFinished: (_) => false,
+                    ),
+                  )
+                : PlayerClientW(
+                    state: player,
+                    isPlaying: state.play.visit(
+                      unoPlaying: (playing) =>
+                          playing.currentPlayer == player.id,
+                      unoWaitingStart: (_) => false,
+                      unoFinished: (_) => false,
+                    ),
+                  ),
           Text("Current color: ${state.currentColor}"),
         ],
       );
@@ -407,8 +751,10 @@ class StateW extends StatelessWidget {
   }
 }
 
+final server = BasicServer()..start();
+
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.client});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -419,7 +765,7 @@ class MyHomePage extends StatefulWidget {
   // used by the build method of the State. Fields in a Widget subclass are
   // always marked "final".
 
-  final String title;
+  final UnoClient client;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -427,7 +773,7 @@ class MyHomePage extends StatefulWidget {
 
 class _PlayCardDialog extends StatefulWidget {
   const _PlayCardDialog({super.key, required this.state});
-  final UnoState state;
+  final UnoPlayerState state;
 
   @override
   State<_PlayCardDialog> createState() => __PlayCardDialogState();
@@ -454,8 +800,6 @@ class __PlayCardDialogState extends State<_PlayCardDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final cards = widget
-        .state.players[(widget.state.play as UnoPlaying).currentPlayer]!.cards;
     return MD3FullScreenDialog(
       action: _saveButton(context),
       body: ListView(
@@ -464,18 +808,19 @@ class __PlayCardDialogState extends State<_PlayCardDialog> {
             SizedBox(
               height: 100,
               child: UnoCardContainer(
-                child: UnoCardW(card: cards[selectedCard!]),
+                child: UnoCardW(card: widget.state.cards[selectedCard!]),
               ),
             ),
           SizedBox(
             height: 100,
             child: UnoCardListW(
-              cards: cards,
+              cards: widget.state.cards,
               axis: Axis.horizontal,
               onPressed: _selectCard,
             ),
           ),
-          if (selectedCard != null && isWildcard(cards[selectedCard!]))
+          if (selectedCard != null &&
+              isWildcard(widget.state.cards[selectedCard!]))
             MD3PopupMenuButton(
                 initialValue: selectedColor,
                 onSelected: _selectColor,
@@ -493,92 +838,57 @@ class __PlayCardDialogState extends State<_PlayCardDialog> {
 }
 
 Future<TupleN2<int, UnoCardColor?>?> showPlayCardDialog(
-        BuildContext context, UnoState state) =>
+        BuildContext context, UnoPlayerState state) =>
     showDialog(
       context: context,
       builder: (context) => _PlayCardDialog(state: state),
     );
 
 class _MyHomePageState extends State<MyHomePage> {
-  UnoStateMachine _machine = ActualUnoStateMachine(
-    7,
-    Duration(seconds: 30),
-    Duration(seconds: 5),
-    {
-      UnoRule.plusFourStacksPlusFour,
-      UnoRule.plusFourStacksPlusTwo,
-      UnoRule.plusTwoStacksPlusTwo,
-    },
-  );
-  bool isPaused = true;
-  late StreamSubscription<void> ticker;
-
   void initState() {
     super.initState();
-    ticker = Stream.periodic(Duration(milliseconds: 500))
-        .listen((event) => _machine.dispatch(TimePassed()));
-    isPaused = false;
   }
 
   void _togglePause() {
     setState(() {});
-    if (isPaused) {
-      ticker.resume();
-      isPaused = false;
-      return;
-    }
-    ticker.pause();
-    isPaused = true;
   }
 
   static int playerId = 0;
 
-  void _addEvent(BuildContext context) {
+  void _addEvent(BuildContext context, UnoClientState state) {
     showModalBottomSheet(
       context: context,
       builder: (context) => Column(
         children: [
           ListTile(
             title: Text("Start Game"),
-            onTap: () => _machine.dispatch(StartGame()),
+            onTap: () => widget.client.startGame(),
           ),
           ListTile(
             title: Text("Play Card"),
             onTap: () async {
-              final wasPaused = isPaused;
-              if (!wasPaused) {
-                _togglePause();
-              }
-              final r =
-                  await showPlayCardDialog(context, _machine.currentState);
-              if (!wasPaused) {
-                _togglePause();
-              }
+              final r = await showPlayCardDialog(context, state.player);
+
               if (r == null) {
                 return;
               }
-              _machine.dispatch(PlayCard(r.e0, r.e1));
+              widget.client.playCard(r.e0, r.e1);
             },
           ),
           ListTile(
             title: Text("Say Uno"),
-            onTap: () => _machine.dispatch(SayUno()),
+            onTap: () => widget.client.sayUno(),
           ),
           ListTile(
-            title: Text("Add Player"),
+            title: Text("Add Bot"),
             onTap: () {
               final id = playerId++;
-              _machine.dispatch(
-                AddPlayer(
-                  UnoPlayerId(id.toString()),
-                  "player ${id}",
-                ),
-              );
+              widget.client.addBot();
             },
           ),
           ListTile(
             title: Text("Draw card"),
-            onTap: () => _machine.dispatch(PlayerDrewCard()),
+            onTap: () => widget.client.drawCard(),
           ),
         ],
       ),
@@ -597,22 +907,23 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: MD3CenterAlignedAppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-        trailing: IconButton(
-          onPressed: _togglePause,
-          icon: Icon(isPaused ? Icons.play_arrow : Icons.pause),
-        ),
+        title: Text("Uno"),
       ),
       body: MD3ScaffoldBody.noMargin(
         child: StreamBuilder(
-          stream: _machine.state,
+          stream: widget.client.state,
           builder: (context, snap) => snap.hasData
-              ? StateW(state: snap.requireData)
+              ? StateW(
+                  state: snap.requireData,
+                  onPlayCard: widget.client.playCard,
+                  onEatCard: widget.client.drawCard,
+                )
               : CircularProgressIndicator(),
         ),
       ),
       floatingActionButton: MD3FloatingActionButton.expanded(
-        onPressed: () => _addEvent(context),
+        onPressed: () async =>
+            _addEvent(context, await widget.client.currentState),
         label: Text('Add event'),
         icon: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.

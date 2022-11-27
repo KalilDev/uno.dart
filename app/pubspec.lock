@@ -14,7 +14,7 @@ packages:
       name: adt_annotation_base
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.0.2"
+    version: "3.0.8"
   adt_generator:
     dependency: "direct dev"
     description:
@@ -290,7 +290,7 @@ packages:
       name: kalil_adt_annotation
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.0.3"
+    version: "3.0.10"
   kalil_utils:
     dependency: "direct main"
     description:
@@ -389,6 +389,20 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.8.2"
+  path_parsing:
+    dependency: transitive
+    description:
+      name: path_parsing
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.1"
+  petitparser:
+    dependency: transitive
+    description:
+      name: petitparser
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "5.1.0"
   pool:
     dependency: transitive
     description:
@@ -527,6 +541,27 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.3.1"
+  uuid:
+    dependency: transitive
+    description:
+      name: uuid
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.0.7"
+  value_notifier:
+    dependency: transitive
+    description:
+      path: "../../value_notifier"
+      relative: true
+    source: path
+    version: "0.0.2-prerelease.20"
+  vector_drawable:
+    dependency: "direct main"
+    description:
+      path: "../../vector_drawable"
+      relative: true
+    source: path
+    version: "0.0.1-testing.0"
   vector_math:
     dependency: transitive
     description:
@@ -548,6 +583,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.2.0"
+  xml:
+    dependency: transitive
+    description:
+      name: xml
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "5.4.1"
   yaml:
     dependency: transitive
     description:

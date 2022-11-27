@@ -40,6 +40,8 @@ dependencies:
   material_widgets: 0.4.0-preview.9
   libuno:
     path: ../libuno
+  vector_drawable:
+    path: ../../vector_drawable
 
 dev_dependencies:
   flutter_test:

@@ -51,3 +51,60 @@ class PlayersPlayedCardsAndCardStack
 
   Object toJson() => [e0, e1, e2];
 }
+
+class GameParameters implements ProductType {
+  final int cardsInHand;
+  final Duration playDuration;
+  final Duration unoSnitchTime;
+  final Set<UnoRule> rules;
+
+  const GameParameters(
+      this.cardsInHand, this.playDuration, this.unoSnitchTime, this.rules)
+      : super();
+
+  const GameParameters.named(
+      {required this.cardsInHand,
+      required this.playDuration,
+      required this.unoSnitchTime,
+      required this.rules})
+      : super();
+
+  @override
+  ProductRuntimeType get runtimeType =>
+      ProductRuntimeType([int, Duration, Duration, Set<UnoRule>]);
+
+  @override
+  int get hashCode => Object.hash(
+      (GameParameters), cardsInHand, playDuration, unoSnitchTime, rules);
+  @override
+  bool operator ==(other) =>
+      identical(this, other) ||
+      (other is GameParameters &&
+          true &&
+          this.cardsInHand == other.cardsInHand &&
+          this.playDuration == other.playDuration &&
+          this.unoSnitchTime == other.unoSnitchTime &&
+          this.rules == other.rules);
+
+  @override
+  String toString() =>
+      "GameParameters { $cardsInHand, $playDuration, $unoSnitchTime, $rules }";
+
+  GameParameters copyWith(
+          {Maybe<int> cardsInHand = const Maybe.none(),
+          Maybe<Duration> playDuration = const Maybe.none(),
+          Maybe<Duration> unoSnitchTime = const Maybe.none(),
+          Maybe<Set<UnoRule>> rules = const Maybe.none()}) =>
+      GameParameters(
+          cardsInHand.valueOr(this.cardsInHand),
+          playDuration.valueOr(this.playDuration),
+          unoSnitchTime.valueOr(this.unoSnitchTime),
+          rules.valueOr(this.rules));
+
+  Object toJson() => {
+        cardsInHand: cardsInHand,
+        playDuration: playDuration,
+        unoSnitchTime: unoSnitchTime,
+        rules: rules
+      };
+}

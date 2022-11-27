@@ -1,3 +1,4 @@
+import 'package:app/vector.dart';
 import 'package:flutter/material.dart';
 import 'package:material_widgets/material_widgets.dart';
 
@@ -72,11 +73,11 @@ class UnoAppColorTheme
   final CustomColorTheme red;
   final CustomColorTheme black;
 
-  static Color greenSeed = Color(0xFF2c5835);
-  static Color blueSeed = Color(0xFF376096);
-  static Color yellowSeed = Color(0xFFe9db44);
-  static Color redSeed = Color(0xFFd03b41);
-  static Color blackSeed = Color(0xFF000000);
+  static Color greenSeed = greenC;
+  static Color blueSeed = blueC;
+  static Color yellowSeed = yellowC;
+  static Color redSeed = redC;
+  static Color blackSeed = blackC;
 
   UnoAppColorTheme({
     required this.green,
