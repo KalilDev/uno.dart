@@ -64,6 +64,9 @@ final partida_get_cor_da_partida = libuno.lookupFunction<
 final partida_comer_carta =
     libuno.lookupFunction<c.partida_comer_carta, d.partida_comer_carta>(
         "partida_comer_carta");
+final partida_jogar_bot =
+    libuno.lookupFunction<c.partida_jogar_bot, d.partida_jogar_bot>(
+        "partida_jogar_bot");
 final partida_begin =
     libuno.lookupFunction<c.partida_begin, d.partida_begin>("partida_begin");
 final partida_end =

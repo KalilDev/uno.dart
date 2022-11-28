@@ -56,6 +56,7 @@ typedef partida_jogar_carta = void Function(
 typedef partida_get_cor_da_partida = cCorDaCarta Function(c.Pointer<Partida>);
 typedef partida_comer_carta = void Function(
     c.Pointer<Partida>, id_jogador, c.Pointer<c.Pointer<Utf8>>);
+typedef partida_jogar_bot = void Function(c.Pointer<Partida>);
 typedef partida_begin = c.Pointer<Jogador> Function(c.Pointer<Partida>);
 typedef partida_end = c.Pointer<Jogador> Function(c.Pointer<Partida>);
 
