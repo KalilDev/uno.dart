@@ -86,3 +86,10 @@ void partida_jogar_carta(c.Pointer<Partida> self, int id_jogador, int i) {
   }
   malloc.free(e);
 }
+
+String interface_get_instrucoes(c.Pointer<Interface> self) {
+  final c_str = impl.interface_get_instrucoes(self);
+  final dartStr = c_str.toDartString();
+  malloc.free(c_str);
+  return dartStr;
+}
