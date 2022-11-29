@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:app/color_scheme.dart';
@@ -6,14 +7,16 @@ import 'package:app/vector.dart' as vd;
 import 'package:flutter/material.dart';
 import 'package:kalil_utils/utils.dart';
 import 'package:libuno/client.dart';
+import 'package:libuno/native/server.dart';
 import 'package:libuno/uno.dart';
 import 'package:material_widgets/material_widgets.dart';
 import 'package:vector_drawable/vector_drawable.dart' hide Path;
-import 'package:vector_math/vector_math_64.dart' hide Vector;
+import 'package:vector_math/vector_math_64.dart' hide Vector, Colors;
 
 import '3d_stack.dart';
 
 void main() {
+  print(File("libuno.so").absolute);
   runDynamicallyThemedApp(const MyApp(), fallback: () => baseline3PCorePalette);
 }
 
@@ -166,6 +169,22 @@ class UnoCardW extends StatelessWidget {
       );
 }
 
+class VectorShadowDecorationPainter extends BoxPainter {
+  const VectorShadowDecorationPainter();
+  @override
+  void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {
+    final path = CardShape().getOuterPath(offset & configuration.size!);
+    canvas.drawShadow(path, Colors.black, 3, false);
+  }
+}
+
+class VectorShadowDecoration extends Decoration {
+  const VectorShadowDecoration();
+  @override
+  BoxPainter createBoxPainter([VoidCallback? onChanged]) =>
+      const VectorShadowDecorationPainter();
+}
+
 class PressableCard extends StatelessWidget {
   const PressableCard({
     super.key,
@@ -179,9 +198,12 @@ class PressableCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final w = RawVectorWidget(
-      vector: vector.body,
-      styleMapping: styleResolver,
+    final w = DecoratedBox(
+      decoration: const VectorShadowDecoration(),
+      child: RawVectorWidget(
+        vector: vector.body,
+        styleMapping: styleResolver,
+      ),
     );
     if (onPressed == null) {
       return w;
@@ -751,7 +773,7 @@ class StateW extends StatelessWidget {
   }
 }
 
-final server = BasicServer()..start();
+final server = UnoNativeServer();
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.client});

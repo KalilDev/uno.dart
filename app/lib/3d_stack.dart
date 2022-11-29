@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
@@ -76,7 +77,8 @@ class _AnimatedStack3DState extends State<AnimatedStack3D> {
     final centerLength = (rect.center - rect.topLeft).distance;
     //print(centerLength);
     //factor = distanceToCenter / centerLength;
-    Offset norm(Offset a) => a / a.distance;
+    Offset norm(Offset a) =>
+        a / sqrt(rect.width * rect.width + rect.height * rect.height);
     center = Vector2(
       -norm(e.position - rect.center).dx,
       norm(e.position - rect.center).dy,

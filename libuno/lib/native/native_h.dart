@@ -50,6 +50,15 @@ class Jogador extends c.Opaque {}
 typedef jogador_get_mao = c.Pointer<Mao> Function(c.Pointer<Jogador>);
 typedef jogador_get_id = id_jogador Function(c.Pointer<Jogador>);
 
+/** pilha.hpp
+ * 
+ */
+class Pilha extends c.Opaque {}
+
+typedef pilha_size = c.Size Function(c.Pointer<Pilha>);
+typedef pilha_begin = c.Pointer<c.Pointer<Carta>> Function(c.Pointer<Pilha>);
+typedef pilha_end = c.Pointer<c.Pointer<Carta>> Function(c.Pointer<Pilha>);
+
 /** partida.hpp
  *
  */
@@ -65,6 +74,14 @@ typedef partida_get_cor_da_partida = cCorDaCarta Function(c.Pointer<Partida>);
 typedef partida_comer_carta = c.Void Function(
     c.Pointer<Partida>, id_jogador, c.Pointer<c.Pointer<Utf8>>);
 typedef partida_jogar_bot = c.Void Function(c.Pointer<Partida>);
+typedef partida_get_cartas_na_mesa = c.Pointer<Pilha> Function(
+    c.Pointer<Partida>);
+typedef partida_get_cartas_para_comer = c.Pointer<Pilha> Function(
+    c.Pointer<Partida>);
+typedef partida_get_vencedor = c.Int Function(c.Pointer<Partida>);
+typedef partida_size = c.Size Function(c.Pointer<Partida>);
+typedef partida_at = c.Pointer<Jogador> Function(
+    c.Pointer<Partida>, c.Size, c.Pointer<c.Pointer<Utf8>>);
 typedef partida_begin = c.Pointer<Jogador> Function(c.Pointer<Partida>);
 typedef partida_end = c.Pointer<Jogador> Function(c.Pointer<Partida>);
 
@@ -77,7 +94,7 @@ typedef interface_new = c.Pointer<Interface> Function();
 typedef interface_delete = c.Void Function(c.Pointer<Interface>);
 typedef interface_get_partida = c.Pointer<Partida> Function(
     c.Pointer<Interface>);
-typedef interface_get_instrucoes = c.Pointer<c.Char> Function(
+typedef interface_get_instrucoes = c.Pointer<Utf8> Function(
     c.Pointer<Interface>);
 typedef interface_sair = c.Void Function(c.Pointer<Interface>);
 typedef interface_resetar = c.Void Function(c.Pointer<Interface>);

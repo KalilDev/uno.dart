@@ -53,7 +53,7 @@ c.Pointer<Carta> mao_at(c.Pointer<Mao> self, int i) {
   if (e.value != c.nullptr) {
     final string = e.value.toDartString();
     malloc.free(e);
-    throw Exception();
+    throw Exception(string);
   }
   malloc.free(e);
   return v;
@@ -82,9 +82,32 @@ void partida_jogar_carta(c.Pointer<Partida> self, int id_jogador, int i) {
   if (e.value != c.nullptr) {
     final string = e.value.toDartString();
     malloc.free(e);
-    throw Exception();
+    throw Exception(string);
   }
   malloc.free(e);
+}
+
+void partida_comer_carta(c.Pointer<Partida> self, int id_jogador) {
+  c.Pointer<c.Pointer<Utf8>> e = malloc(c.sizeOf<c.Pointer<Utf8>>());
+  impl.partida_comer_carta(self, id_jogador, e);
+  if (e.value != c.nullptr) {
+    final string = e.value.toDartString();
+    malloc.free(e);
+    throw Exception(string);
+  }
+  malloc.free(e);
+}
+
+c.Pointer<Jogador> partida_at(c.Pointer<Partida> self, int i) {
+  c.Pointer<c.Pointer<Utf8>> e = malloc(c.sizeOf<c.Pointer<Utf8>>());
+  final v = impl.partida_at(self, i, e);
+  if (e.value != c.nullptr) {
+    final string = e.value.toDartString();
+    malloc.free(e);
+    throw Exception(string);
+  }
+  malloc.free(e);
+  return v;
 }
 
 String interface_get_instrucoes(c.Pointer<Interface> self) {

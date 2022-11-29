@@ -2,7 +2,8 @@ import 'dart:ffi' as ffi;
 import 'native_h.dart' as c;
 import 'native_d.dart' as d;
 
-final libuno = ffi.DynamicLibrary.open("libuno.so");
+final libuno =
+    ffi.DynamicLibrary.open("/home/pedro/projects/uno_dart/app/libuno.so");
 
 /** carta.hpp
  *
@@ -46,6 +47,14 @@ final jogador_get_mao = libuno
     .lookupFunction<c.jogador_get_mao, d.jogador_get_mao>("jogador_get_mao");
 final jogador_get_id =
     libuno.lookupFunction<c.jogador_get_id, d.jogador_get_id>("jogador_get_id");
+/** pilha.hpp
+ * 
+ */
+final pilha_size =
+    libuno.lookupFunction<c.pilha_size, d.pilha_size>("pilha_size");
+final pilha_begin =
+    libuno.lookupFunction<c.pilha_begin, d.pilha_begin>("pilha_begin");
+final pilha_end = libuno.lookupFunction<c.pilha_end, d.pilha_end>("pilha_end");
 /** partida.hpp
  *
  */
@@ -67,6 +76,19 @@ final partida_comer_carta =
 final partida_jogar_bot =
     libuno.lookupFunction<c.partida_jogar_bot, d.partida_jogar_bot>(
         "partida_jogar_bot");
+final partida_get_cartas_na_mesa = libuno.lookupFunction<
+    c.partida_get_cartas_na_mesa,
+    d.partida_get_cartas_na_mesa>("partida_get_cartas_na_mesa");
+final partida_get_cartas_para_comer = libuno.lookupFunction<
+    c.partida_get_cartas_para_comer,
+    d.partida_get_cartas_para_comer>("partida_get_cartas_para_comer");
+final partida_get_vencedor =
+    libuno.lookupFunction<c.partida_get_vencedor, d.partida_get_vencedor>(
+        "partida_get_vencedor");
+final partida_size =
+    libuno.lookupFunction<c.partida_size, d.partida_size>("partida_size");
+final partida_at =
+    libuno.lookupFunction<c.partida_at, d.partida_at>("partida_at");
 final partida_begin =
     libuno.lookupFunction<c.partida_begin, d.partida_begin>("partida_begin");
 final partida_end =

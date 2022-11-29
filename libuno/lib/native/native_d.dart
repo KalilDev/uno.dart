@@ -2,7 +2,7 @@ import 'dart:ffi' as c;
 import 'package:ffi/ffi.dart';
 
 import 'native_h.dart'
-    show Carta, CartaEspecial, Mao, Jogador, Partida, Interface;
+    show Carta, CartaEspecial, Mao, Jogador, Pilha, Partida, Interface;
 
 /** carta.hpp
  *
@@ -44,6 +44,13 @@ typedef id_jogador = int;
 typedef jogador_get_mao = c.Pointer<Mao> Function(c.Pointer<Jogador>);
 typedef jogador_get_id = id_jogador Function(c.Pointer<Jogador>);
 
+/** pilha.hpp
+ * 
+ */
+typedef pilha_size = int Function(c.Pointer<Pilha>);
+typedef pilha_begin = c.Pointer<c.Pointer<Carta>> Function(c.Pointer<Pilha>);
+typedef pilha_end = c.Pointer<c.Pointer<Carta>> Function(c.Pointer<Pilha>);
+
 /** partida.hpp
  *
  */
@@ -57,6 +64,14 @@ typedef partida_get_cor_da_partida = cCorDaCarta Function(c.Pointer<Partida>);
 typedef partida_comer_carta = void Function(
     c.Pointer<Partida>, id_jogador, c.Pointer<c.Pointer<Utf8>>);
 typedef partida_jogar_bot = void Function(c.Pointer<Partida>);
+typedef partida_get_cartas_na_mesa = c.Pointer<Pilha> Function(
+    c.Pointer<Partida>);
+typedef partida_get_cartas_para_comer = c.Pointer<Pilha> Function(
+    c.Pointer<Partida>);
+typedef partida_get_vencedor = int Function(c.Pointer<Partida>);
+typedef partida_size = int Function(c.Pointer<Partida>);
+typedef partida_at = c.Pointer<Jogador> Function(
+    c.Pointer<Partida>, int, c.Pointer<c.Pointer<Utf8>>);
 typedef partida_begin = c.Pointer<Jogador> Function(c.Pointer<Partida>);
 typedef partida_end = c.Pointer<Jogador> Function(c.Pointer<Partida>);
 
@@ -67,7 +82,7 @@ typedef interface_new = c.Pointer<Interface> Function();
 typedef interface_delete = void Function(c.Pointer<Interface>);
 typedef interface_get_partida = c.Pointer<Partida> Function(
     c.Pointer<Interface>);
-typedef interface_get_instrucoes = c.Pointer<c.Char> Function(
+typedef interface_get_instrucoes = c.Pointer<Utf8> Function(
     c.Pointer<Interface>);
 typedef interface_sair = void Function(c.Pointer<Interface>);
 typedef interface_resetar = void Function(c.Pointer<Interface>);
