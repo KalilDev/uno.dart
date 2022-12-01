@@ -47,11 +47,13 @@ class AnimatedStack3D extends StatefulWidget {
     required this.itemCount,
     this.itemSeparation = 0.5,
     this.initialDirection,
+    this.animated = true,
   });
   final IndexedWidgetBuilder itemBuilder;
   final int itemCount;
   final double itemSeparation;
   final Vector2? initialDirection;
+  final bool animated;
 
   @override
   State<AnimatedStack3D> createState() => _AnimatedStack3DState();
@@ -98,7 +100,7 @@ class _AnimatedStack3DState extends State<AnimatedStack3D> {
         hitTestBehavior: HitTestBehavior.opaque,
         onExit: _onExit,
         child: TweenAnimationBuilder(
-            tween: Tween(end: factor),
+            tween: Tween(end: widget.animated ? factor : 1.0),
             duration: Duration(milliseconds: 300),
             builder: (context, factor, _) => Stack3D(
                   itemBuilder: widget.itemBuilder,
