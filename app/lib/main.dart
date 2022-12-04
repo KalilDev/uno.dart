@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:kalil_utils/utils.dart';
 import 'package:libuno/client.dart';
 import 'package:libuno/native/server.dart';
+import 'package:libuno/server.dart';
 import 'package:libuno/uno.dart';
 import 'package:material_widgets/material_widgets.dart';
 import 'package:vector_drawable/vector_drawable.dart' hide Path;
@@ -39,7 +40,12 @@ extension on UnoAppColorScheme {
   }
 }
 
-final addPlayer = server.addPlayer("Pedro");
+final addPlayer = server.addPlayer("Pedro").then((value) async {
+  await server.addBot(value);
+  await server.addBot(value);
+  await server.addBot(value);
+  return value;
+});
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -181,6 +187,21 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+class _FAB extends StatelessWidget {
+  const _FAB({super.key, required this.state, required this.onPlay});
+  final UnoPlayState state;
+  final VoidCallback onPlay;
+
+  @override
+  Widget build(BuildContext context) => state.visit(
+      unoPlaying: (p) => SizedBox(),
+      unoWaitingStart: (_) => MD3FloatingActionButton.large(
+            onPressed: onPlay,
+            child: Icon(Icons.play_arrow_outlined),
+          ),
+      unoFinished: (_) => SizedBox());
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
@@ -206,38 +227,53 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  void _showInfoDialog(BuildContext context) async {
+    final instrucoes = await widget.client.getInstructions();
+    showDialog(
+      context: context,
+      builder: (context) => MD3BasicDialog(
+        title: Text("Instrucões"),
+        content: Text(instrucoes),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text("Ok!"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return MD3AdaptativeScaffold(
-      appBar: MD3CenterAlignedAppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text("Uno"),
-      ),
-      body: MD3ScaffoldBody.noMargin(
-        child: StreamBuilder(
-          stream: widget.client.state,
-          builder: (context, snap) => snap.hasData
-              ? StateW(
+    return StreamBuilder(
+      stream: widget.client.state,
+      builder: (context, snap) => snap.hasData
+          ? MD3AdaptativeScaffold(
+              appBar: MD3SmallAppBar(
+                title: Text("Uno"),
+                actions: [
+                  IconButton(
+                    onPressed: _showInfoDialog.curry(context),
+                    icon: Icon(
+                      Icons.info_outline,
+                    ),
+                  )
+                ],
+              ),
+              body: MD3ScaffoldBody.noMargin(
+                child: StateW(
                   state: snap.requireData,
                   onPlayCard: widget.client.playCard,
                   onEatCard: widget.client.drawCard,
-                )
-              : CircularProgressIndicator(),
-        ),
-      ),
-      floatingActionButton: MD3FloatingActionButton.expanded(
-        onPressed: () async =>
-            _addEvent(context, await widget.client.currentState),
-        label: Text('Add event'),
-        icon: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+                ),
+              ),
+              floatingActionButton: _FAB(
+                state: snap.requireData.play,
+                onPlay: widget.client.startGame,
+              ),
+            )
+          : CircularProgressIndicator(),
     );
   }
 }

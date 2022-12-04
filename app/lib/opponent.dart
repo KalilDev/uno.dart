@@ -54,16 +54,22 @@ class OpponentW extends StatelessWidget {
   }
 
   List<Widget> _children(BuildContext context) => [
-        Avatar(
-          name: state.name,
-          id: state.id,
-        ),
-        UnoIndicator(didUno: state.didUno),
-        Expanded(
-          child: UnoBackCardListW(
-            cards: state.cardCount,
-            axis: position.isVertical ? Axis.vertical : Axis.horizontal,
+        Center(
+          child: Avatar(
+            name: state.name,
+            id: state.id,
           ),
+        ),
+        SizedBox.square(
+          dimension: context.sizeClass.minimumMargins / 2,
+        ),
+        UnoIndicator(
+          didUno: state.didUno,
+          isVertical: position.isVertical,
+        ),
+        UnoBackCardListW(
+          cards: state.cardCount,
+          axis: position.isVertical ? Axis.vertical : Axis.horizontal,
         ),
       ];
 
@@ -107,15 +113,12 @@ class OpponentW extends StatelessWidget {
     return _card(
       context,
       style: style,
-      child: position.isVertical
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              children: _children(context),
-            )
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: _children(context),
-            ),
+      child: ListView(
+        primary: false,
+        scrollDirection: position.isVertical ? Axis.vertical : Axis.horizontal,
+        padding: style.padding!.resolve({}),
+        children: _children(context),
+      ),
     );
   }
 }

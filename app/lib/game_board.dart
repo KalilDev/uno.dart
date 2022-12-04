@@ -64,12 +64,12 @@ class GameBoard extends StatelessWidget {
   final UnoClientState state;
   final VoidCallback onEatCard;
   final void Function(int, [UnoCardColor?]) onPlayCard;
-  static const opponentFactor = 1.5;
+  static const opponentFactor = 1.3;
   static const opponentHeight = 100.0 * opponentFactor;
   static const opponentWidth = 70.4545454545454545 * opponentFactor;
   static const playerHeight = 200.0;
-  static const smallPadding = 16.0;
-  static const largePadding = 24.0;
+  static const smallPadding = 8.0;
+  static const largePadding = 12.0;
   Widget _player(BuildContext context, bool isPlaying) => PlayerW(
         state: state.player,
         isPlaying: isPlaying,
@@ -139,16 +139,15 @@ class GameBoard extends StatelessWidget {
           bottom: playerHeight + largePadding,
           child: _center(context, currentPlayer == state.player.id),
         ),
-        if (false)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SizedBox(
-              height: playerHeight,
-              child: _player(context, currentPlayer == state.player.id),
-            ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: SizedBox(
+            height: playerHeight,
+            child: _player(context, currentPlayer == state.player.id),
           ),
+        ),
       ],
     );
   }

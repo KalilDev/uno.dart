@@ -4,13 +4,29 @@ class CardWrapper extends StatelessWidget {
   const CardWrapper({
     super.key,
     required this.child,
-    this.byHeight = true,
+    this.byHeight,
   });
   final Widget child;
-  final bool byHeight;
+  final bool? byHeight;
 
   Widget _build(BuildContext context, BoxConstraints constraints) {
-    if (!byHeight) {
+    if (byHeight == null) {
+      // try by width
+      final width = constraints.maxWidth;
+      final height = width * CardAspectRatio.aspectRatio;
+      if (height > constraints.maxHeight) {
+        return CardWrapper(
+          byHeight: true,
+          child: child,
+        );
+      }
+      return SizedBox(
+        width: width,
+        height: height,
+        child: child,
+      );
+    }
+    if (!byHeight!) {
       final width = constraints.maxWidth;
       final height = width * CardAspectRatio.aspectRatio;
       return SizedBox(

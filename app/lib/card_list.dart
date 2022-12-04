@@ -16,9 +16,12 @@ class UnoCardListW extends StatelessWidget {
   final ValueChanged<int>? onPressed;
   final Axis axis;
 
-  Widget _buildCard(BuildContext context, int i) => UnoCardW(
-        card: cards[i],
-        onPressed: onPressed == null ? null : () => onPressed!.call(i),
+  Widget _buildCard(BuildContext context, int i) => CardWrapper(
+        byHeight: axis == Axis.horizontal,
+        child: UnoCardW(
+          card: cards[i],
+          onPressed: onPressed == null ? null : () => onPressed!.call(i),
+        ),
       );
   Iterable<Widget> children(BuildContext context) sync* {
     var isFirst = true;

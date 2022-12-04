@@ -17,27 +17,28 @@ class PlayerW extends StatelessWidget {
   final bool isPlaying;
   final ValueChanged<int>? onCard;
 
-  Widget _row(BuildContext context) => SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Avatar(name: state.name, id: state.id),
-            UnoIndicator(didUno: state.didUno),
-            UnoCardListW(
-              cards: state.cards,
-              axis: Axis.horizontal,
-              onPressed: onCard,
-            ),
-          ],
+  List<Widget> _children(BuildContext context) => [
+        Center(child: Avatar(name: state.name, id: state.id)),
+        SizedBox.square(
+          dimension: context.sizeClass.minimumMargins / 2,
         ),
-      );
+        UnoIndicator(
+          didUno: state.didUno,
+          isVertical: false,
+        ),
+        UnoCardListW(
+          cards: state.cards,
+          axis: Axis.horizontal,
+          onPressed: onCard,
+        ),
+      ];
 
   Widget _card(
     BuildContext context, {
     required CardStyle style,
     required Widget child,
   }) {
+    style = style.copyWith(padding: MaterialStateProperty.all(EdgeInsets.zero));
     return isPlaying
         ? FilledCard(
             style: style,
@@ -72,7 +73,12 @@ class PlayerW extends StatelessWidget {
     return _card(
       context,
       style: style,
-      child: _row(context),
+      child: ListView(
+        primary: false,
+        scrollDirection: Axis.horizontal,
+        padding: style.padding!.resolve({}),
+        children: _children(context),
+      ),
     );
   }
 }
