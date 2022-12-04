@@ -2,8 +2,7 @@ import 'dart:ffi' as ffi;
 import 'native_h.dart' as c;
 import 'native_d.dart' as d;
 
-final libuno =
-    ffi.DynamicLibrary.open("/home/pedro/projects/uno_dart/app/libuno.so");
+final libuno = ffi.DynamicLibrary.open("libuno.so");
 
 /** carta.hpp
  *

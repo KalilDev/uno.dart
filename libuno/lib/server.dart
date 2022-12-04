@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:kalil_adt_annotation/kalil_adt_annotation.dart';
@@ -13,31 +14,82 @@ import 'state_machine.dart';
 import 'package:meta/meta.dart';
 
 class BasicServer extends UnoServer {
+  int id = 0;
   UnoPlayerId? _admin;
   final List<UnoPlayerId> _players = [];
   bool isPaused = true;
   late StreamSubscription<void> ticker;
+  final Set<UnoPlayerId> bots = {};
   void start() {
     ticker = Stream.periodic(Duration(milliseconds: 500))
         .listen((event) => stateMachine.dispatch(TimePassed()));
     isPaused = false;
+    _currentPlayer.listen((playerId) async {
+      print("TURN OF $playerId");
+      if (bots.contains(playerId)) {
+        await Future.delayed(Duration(seconds: 5));
+        await _playBot(playerId!);
+      }
+    });
   }
+
+  Future<bool> _playBot(UnoPlayerId bot) {
+    final player = stateMachine.currentState.players[bot]!;
+    final cards = player.cards.toList();
+    final lastColor = stateMachine.currentState.currentColor;
+    final lastCard = stateMachine.currentState.cardStack.last;
+    for (final card in cards.toList()) {
+      if (!card.visitC(
+        defaultCard: (c, i) =>
+            c == lastColor || (lastCard is DefaultCard && lastCard.number == i),
+        reverseCard: (c) => c == lastColor || lastCard is ReverseCard,
+        blockCard: (c) => c == lastColor || lastCard is BlockCard,
+        plusTwoCard: (c) => c == lastColor || lastCard is PlusTwoCard,
+        plusFourCard: () => true,
+        rainbowCard: () => true,
+      )) {
+        cards.remove(card);
+      }
+    }
+    if (cards.isEmpty) {
+      return sendClientEvent(bot, PlayerDrewCard());
+    }
+    final r = Random();
+    return sendClientEvent(
+      bot,
+      PlayCard(
+        player.cards.indexOf(cards[r.nextInt(cards.length)]),
+        UnoCardColor.values[r.nextInt(UnoCardColor.values.length)],
+      ),
+    );
+  }
+
+  Stream<UnoPlayerId?> get _currentPlayer => stateMachine.state
+      .map(
+        (state) => state.play.visit(
+          unoPlaying: (p) => p.currentPlayer,
+          unoWaitingStart: (_) => null,
+          unoFinished: (_) => null,
+        ),
+      )
+      .distinct();
 
   @override
   Future<void> addBot(UnoPlayerId requestingPlayer) async {
     if (requestingPlayer != _admin) {
       return;
     }
-    final id = UnoPlayerId(Uuid().v4());
-    await stateMachine.dispatch(AddPlayer(id, id.unwrap));
+    final id = UnoPlayerId("${this.id++}");
+    bots.add(id);
+    await stateMachine.dispatch(AddPlayer(id, "Bot ${id.unwrap}"));
   }
 
   @override
   Future<UnoPlayerId> addPlayer(String name) async {
-    final id = UnoPlayerId(Uuid().v4());
-    if (_admin == null) {
-      _admin = id;
-    }
+    final id = UnoPlayerId("${this.id++}");
+
+    _admin ??= id;
+
     _players.add(id);
     await stateMachine.dispatch(AddPlayer(id, name));
     return id;
@@ -128,18 +180,17 @@ class BasicServer extends UnoServer {
   final UnoStateMachine stateMachine = ActualUnoStateMachine(
     GameParameters(
       7,
-      Duration(seconds: 5),
-      Duration(seconds: 5),
-      {
-        UnoRule.plusFourStacksPlusFour,
-        UnoRule.plusFourStacksPlusTwo,
-        UnoRule.plusTwoStacksPlusTwo,
-      },
+      Duration(seconds: 10),
+      Duration(seconds: 10),
+      {},
     ),
   );
 
   @override
   Future<GameParameters> getParameters() async => stateMachine.parameters;
+
+  @override
+  Future<String> getInstructions() async => "Um jogo uno";
 }
 
 abstract class UnoServer {
@@ -151,4 +202,5 @@ abstract class UnoServer {
   Future<bool> sendClientEvent(UnoPlayerId player, UnoEvent e);
   Future<void> startGame(UnoPlayerId requestingPlayer);
   Future<void> removePlayer(UnoPlayerId requestingPlayer, UnoPlayerId player);
+  Future<String> getInstructions();
 }

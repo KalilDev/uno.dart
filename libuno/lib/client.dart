@@ -97,6 +97,9 @@ class DirectClient extends BaseClient {
 
   @override
   Future<void> addBot() => server.addBot(id);
+
+  @override
+  Future<String> getInstructions() => server.getInstructions();
 }
 
 abstract class UnoClient {
@@ -111,4 +114,5 @@ abstract class UnoClient {
   Future<bool> changeName(String name);
   Future<bool> sayUno();
   Future<void> quit();
+  Future<String> getInstructions();
 }

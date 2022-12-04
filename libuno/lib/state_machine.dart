@@ -595,8 +595,8 @@ class ActualUnoStateMachine extends UnoStateMachine {
     ...UnoCardColor.values.bind(twice).map(ReverseCard.new),
     ...UnoCardColor.values.bind(twice).map(BlockCard.new),
     ...UnoCardColor.values.bind(twice).map(PlusTwoCard.new),
-    ...Iterable.generate(4).map((_) => PlusFourCard()),
-    ...Iterable.generate(4).map((_) => RainbowCard())
+    //...Iterable.generate(4).map((_) => PlusFourCard()),
+    //...Iterable.generate(4).map((_) => RainbowCard())
   ];
 
   UnoState _currentState = () {

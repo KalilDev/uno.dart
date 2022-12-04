@@ -306,4 +306,7 @@ class UnoNativeServer extends UnoServer {
 
   Future<void> removePlayer(
       UnoPlayerId requestingPlayer, UnoPlayerId player) async {}
+
+  @override
+  Future<String> getInstructions() async => interface_get_instrucoes(interface);
 }

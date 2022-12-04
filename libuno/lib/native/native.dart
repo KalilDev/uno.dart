@@ -113,6 +113,5 @@ c.Pointer<Jogador> partida_at(c.Pointer<Partida> self, int i) {
 String interface_get_instrucoes(c.Pointer<Interface> self) {
   final c_str = impl.interface_get_instrucoes(self);
   final dartStr = c_str.toDartString();
-  malloc.free(c_str);
   return dartStr;
 }
