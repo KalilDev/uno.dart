@@ -21,6 +21,11 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+Properties keyProperties = new Properties()
+InputStream ins = new FileInputStream(rootProject.file("key.properties"))
+keyProperties.load(ins)
+ins.close()
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
@@ -42,22 +47,52 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
+    externalNativeBuild {
+        cmake {
+            path file('../../../uno.cpp/CMakeLists.txt')
+            version '3.24.2'
+        }
+    }
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.example.app"
+        applicationId "io.github.kalildev.uno.dart"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-build-configuration.
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 21
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        ndkVersion '25.1.8937393'
+        externalNativeBuild {
+            cmake {
+                cppFlags ''
+            }
+        }
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(keyProperties.getProperty("store.file"))
+            storePassword keyProperties.getProperty("store.password")
+            keyAlias keyProperties.getProperty("key.alias")
+            keyPassword keyProperties.getProperty("key.password")
+        }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
+        }
+    }
+
+    splits {
+        // Configures multiple APKs based on ABI.
+        abi {
+        // Enables building multiple APKs per ABI.
+        enable true
+
+        // Specifies that we do not want to also generate a universal APK that includes all ABIs.
+        universalApk true
         }
     }
 }
@@ -68,4 +103,10 @@ flutter {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    def core_version = "1.8.0"
+    implementation "androidx.core:core:$core_version"
+    implementation "androidx.core:core-ktx:$core_version"
+
+    // Optional - APIs for SplashScreen, including compatiblity helpers on devices prior Android 12
+    implementation "androidx.core:core-splashscreen:1.0.0-rc01"
 }
