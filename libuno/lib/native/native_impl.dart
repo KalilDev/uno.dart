@@ -1,8 +1,17 @@
 import 'dart:ffi' as ffi;
+import 'dart:io';
 import 'native_h.dart' as c;
 import 'native_d.dart' as d;
 
-final libuno = ffi.DynamicLibrary.open("libuno.so");
+final libuno = () {
+  final path;
+  if (Platform.isLinux) {
+    path = File("libuno.so").absolute.path;
+  } else {
+    path = "libuno.so";
+  }
+  return ffi.DynamicLibrary.open(path);
+}();
 
 /** carta.hpp
  *

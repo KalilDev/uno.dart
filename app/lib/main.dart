@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:ui';
 
@@ -8,6 +9,8 @@ import 'package:app/vector.dart' as vd;
 import 'package:flutter/material.dart';
 import 'package:kalil_utils/utils.dart';
 import 'package:libuno/client.dart';
+import 'package:libuno/native/native.dart';
+import 'package:libuno/native/native_h.dart';
 import 'package:libuno/native/server.dart';
 import 'package:libuno/server.dart';
 import 'package:libuno/uno.dart';
@@ -167,7 +170,28 @@ class StateW extends StatelessWidget {
   }
 }
 
-final server = UnoNativeServer();
+final server = UnoNativeServer(LoggingCAPI())..start();
+
+class LoggingCAPI extends CAPIImpl {
+  void Function(Pointer<Partida>, int) get partida_comer_carta => (p, j) {
+        print("Comer carta $j");
+        super.partida_comer_carta(p, j);
+      };
+  void Function(Pointer<Partida>, int, int) get partida_jogar_carta =>
+      (p, j, i) {
+        print("Jogar carta $j $i");
+        super.partida_jogar_carta(p, j, i);
+      };
+  void Function(Pointer<Partida>) get partida_jogar_bot => (p) {
+        print("Jogar bot");
+        super.partida_jogar_bot(p);
+      };
+  int Function(Pointer<Partida>) get partida_get_jogador_atual => (p) {
+        final j = super.partida_get_jogador_atual(p);
+        print("Jogador atual ${j}");
+        return j;
+      };
+}
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.client});
@@ -188,18 +212,28 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _FAB extends StatelessWidget {
-  const _FAB({super.key, required this.state, required this.onPlay});
+  const _FAB({
+    super.key,
+    required this.state,
+    required this.onPlay,
+    required this.onReset,
+  });
   final UnoPlayState state;
   final VoidCallback onPlay;
+  final VoidCallback onReset;
 
   @override
   Widget build(BuildContext context) => state.visit(
-      unoPlaying: (p) => SizedBox(),
-      unoWaitingStart: (_) => MD3FloatingActionButton.large(
-            onPressed: onPlay,
-            child: Icon(Icons.play_arrow_outlined),
-          ),
-      unoFinished: (_) => SizedBox());
+        unoPlaying: (p) => SizedBox(),
+        unoWaitingStart: (_) => MD3FloatingActionButton.large(
+          onPressed: onPlay,
+          child: Icon(Icons.play_arrow_outlined),
+        ),
+        unoFinished: (_) => MD3FloatingActionButton.large(
+          onPressed: onReset,
+          child: Icon(Icons.refresh_outlined),
+        ),
+      );
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -251,14 +285,27 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (context, snap) => snap.hasData
           ? MD3AdaptativeScaffold(
               appBar: MD3SmallAppBar(
-                title: Text("Uno"),
+                isElevated: false,
+                title: Text(
+                  snap.requireData.play.visit(
+                    unoPlaying: (p) =>
+                        "Uno ${p.playRemainingDuration.inSeconds}",
+                    unoWaitingStart: (_) => "Uno Aguardando",
+                    unoFinished: (_) => "Uno Finalizado",
+                  ),
+                ),
                 actions: [
+                  if (snap.requireData.play is UnoPlaying)
+                    IconButton(
+                      onPressed: widget.client.resetGame,
+                      icon: Icon(Icons.refresh),
+                    ),
                   IconButton(
                     onPressed: _showInfoDialog.curry(context),
                     icon: Icon(
                       Icons.info_outline,
                     ),
-                  )
+                  ),
                 ],
               ),
               body: MD3ScaffoldBody.noMargin(
@@ -271,6 +318,7 @@ class _MyHomePageState extends State<MyHomePage> {
               floatingActionButton: _FAB(
                 state: snap.requireData.play,
                 onPlay: widget.client.startGame,
+                onReset: widget.client.resetGame,
               ),
             )
           : CircularProgressIndicator(),

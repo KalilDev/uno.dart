@@ -20,7 +20,7 @@ class BasicServer extends UnoServer {
   bool isPaused = true;
   late StreamSubscription<void> ticker;
   final Set<UnoPlayerId> bots = {};
-  void start() {
+  Future<void> start() async {
     ticker = Stream.periodic(Duration(milliseconds: 500))
         .listen((event) => stateMachine.dispatch(TimePassed()));
     isPaused = false;
@@ -97,7 +97,7 @@ class BasicServer extends UnoServer {
 
   @override
   Future<UnoClientState> currentState(UnoPlayerId player) async =>
-      _unoStateToUnoClientState(player, stateMachine.currentState);
+      unoStateToUnoClientState(player, stateMachine.currentState);
 
   @override
   Future<void> removePlayer(
@@ -148,33 +148,9 @@ class BasicServer extends UnoServer {
     await stateMachine.dispatch(StartGame());
   }
 
-  UnoClientState _unoStateToUnoClientState(
-    UnoPlayerId player,
-    UnoState state,
-  ) =>
-      UnoClientState(
-        state.players.map(
-          (key, value) => MapEntry(
-            key,
-            PlayerClientState(
-              value.id,
-              value.name,
-              value.cards.length,
-              value.lastPlayTime,
-              value.didUno,
-            ),
-          ),
-        ),
-        state.players[player]!,
-        state.playedCards,
-        state.cardStack.length,
-        state.currentColor,
-        state.play,
-      );
-
   @override
   Stream<UnoClientState> state(UnoPlayerId player) =>
-      stateMachine.state.map(_unoStateToUnoClientState.curry(player));
+      stateMachine.state.map(unoStateToUnoClientState.curry(player));
 
   @override
   final UnoStateMachine stateMachine = ActualUnoStateMachine(
@@ -191,9 +167,38 @@ class BasicServer extends UnoServer {
 
   @override
   Future<String> getInstructions() async => "Um jogo uno";
+
+  Future<bool> resetGame() async {
+    return false;
+  }
 }
 
+UnoClientState unoStateToUnoClientState(
+  UnoPlayerId player,
+  UnoState state,
+) =>
+    UnoClientState(
+      state.players.map(
+        (key, value) => MapEntry(
+          key,
+          PlayerClientState(
+            value.id,
+            value.name,
+            value.cards.length,
+            value.lastPlayTime,
+            value.didUno,
+          ),
+        ),
+      ),
+      state.players[player]!,
+      state.playedCards,
+      state.cardStack.length,
+      state.currentColor,
+      state.play,
+    );
+
 abstract class UnoServer {
+  Future<void> start();
   Future<GameParameters> getParameters();
   Future<UnoPlayerId> addPlayer(String name);
   Future<void> addBot(UnoPlayerId requestingPlayer);
@@ -203,4 +208,5 @@ abstract class UnoServer {
   Future<void> startGame(UnoPlayerId requestingPlayer);
   Future<void> removePlayer(UnoPlayerId requestingPlayer, UnoPlayerId player);
   Future<String> getInstructions();
+  Future<bool> resetGame();
 }

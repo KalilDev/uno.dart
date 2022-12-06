@@ -100,6 +100,9 @@ class DirectClient extends BaseClient {
 
   @override
   Future<String> getInstructions() => server.getInstructions();
+
+  @override
+  Future<bool> resetGame() => server.resetGame();
 }
 
 abstract class UnoClient {
@@ -115,4 +118,5 @@ abstract class UnoClient {
   Future<bool> sayUno();
   Future<void> quit();
   Future<String> getInstructions();
+  Future<bool> resetGame();
 }
